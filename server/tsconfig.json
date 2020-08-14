@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+      "target": "es6",
+      "module": "commonjs",
+      "moduleResolution": "node",
+      "baseUrl": ".",
+      "jsx": "react",
+      "paths": {
+          "@root/*": ["./*"],
+          "@lib/*": ["./lib/*"],
+          "@api/*": ["./api/*"]
+      },
+      "sourceMap": true,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "resolveJsonModule": true,
+      "allowSyntheticDefaultImports": true
+    },
+    "include": [
+      "**/*.ts",
+      "**/*.tsx",
+      "secret.ts",
+      "./node_modules/@types/**/*.d.ts"
+    ],
+    "exclude": [
+      "node_modules"
+    ],
+    "allowSyntheticDefaultImports": true
+  }

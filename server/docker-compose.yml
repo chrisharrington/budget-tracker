@@ -1,0 +1,38 @@
+version: '3'
+services:
+
+  transpiler:
+    build:
+      context: .
+      dockerfile: ./transpiler/Dockerfile
+    container_name: budget-transpiler
+    restart: unless-stopped
+    volumes:
+      - ./:/app
+    logging:
+      options:
+        max-file: '3'
+        max-size: '1m'
+
+  database:
+    image: 'mongo'
+    container_name: budget-database
+    restart: unless-stopped
+    volumes:
+      - ./db:/data/db
+    ports:
+      - 27019:27017
+
+  api:
+    build:
+      context: .
+      dockerfile: ./api/Dockerfile
+    container_name: budget-api
+    restart: unless-stopped
+    ports:
+      - 9999:9999
+    volumes:
+      - ./:/app
+    depends_on:
+      - database
+      - transpiler
