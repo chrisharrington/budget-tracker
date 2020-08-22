@@ -1,0 +1,125 @@
+Delivered-To: chrisharringtonbudget@gmail.com
+Received: by 2002:a0c:9ae4:0:0:0:0:0 with SMTP id k36csp633772qvf;
+        Fri, 14 Aug 2020 14:58:34 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzQtrtX1I4hJmHa3TWXQEkTcIVQRJjRm8+j2JamKULlY44fRzRISFn6LtIyO7HtuvhN1tNy
+X-Received: by 2002:ac8:ecf:: with SMTP id w15mr3808920qti.42.1597442314810;
+        Fri, 14 Aug 2020 14:58:34 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1597442314; cv=none;
+        d=google.com; s=arc-20160816;
+        b=SXhN8Sr3mLxZNGHeoIaKg994n/oALhI9hnvYmUKfo0sZCH9Fwvqlcmnf1ZXUoxChgt
+         rT3PEJj34SdnN8fqOP6WQFnG3RCD9mSInvq/Yz8Pu3vJu0XuG9KvH7H2ajlbKC4F56Sj
+         qdu/RUR/g+ejMBEAQfiaVBEf1Qq/jmUbqJMbuJ6hxDxApUxrdM/yaS9bayoI3ln7kdBR
+         pDJtuJp8Osb0R7ds5U+/pGfUUEocYN0H1oScVyPsbm4943r9PvkM8vFih/tZu2SSVMrO
+         l5DQXCe8mJObP88L9ES+OpfNwlou4dVzRbs5vX++79huFALOj3zy4sVigDoR4XRbA7rz
+         z4TA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20160816;
+        h=mime-version:subject:message-id:to:reply-to:from:date:ironport-sdr
+         :dkim-signature;
+        bh=XJr7HlT5jd8a/0Q4O8GEpx75dhtFzttPVnlgutyXQYY=;
+        b=qYhNyVk/U4ZAXvK6i+YApcCxsJ2S7AHAsN5m+Ltt+XCMgtkEuGb2KIh3uX7xI4pwdY
+         Hn0DJKMqRWZWbx5Yb1l1B/JQKug/Gcb33u1uE7G58W+/tjiISCBcocow1aVQtyPgJQV7
+         Z4nvPImYe/P8WnDUY05HnKSvqVHX3viaaAgb7SKr9LzNZ2HnXUbj4+ARddqxTe/GE0Lt
+         xv6Kcl+wYHx06Z0JP0F4Ep8tobiTAARdDvsNvzaTj6JtY1pz0jd8FL3HBwhNqfzt2BdO
+         7tPWYMRll6ptaKnuV1QHqd9OMIh22Gh2gerszE3NZ1aMZAkF3uLag2AnMFWbvt/IKmdZ
+         PukQ==
+ARC-Authentication-Results: i=1; mx.google.com;
+       dkim=pass header.i=@tangerine.ca header.s=selector3 header.b=i+bJbHGz;
+       spf=pass (google.com: domain of prvs=4889bf7b6=donotreply@tangerine.ca designates 159.18.216.16 as permitted sender) smtp.mailfrom="prvs=4889bf7b6=donotreply@tangerine.ca";
+       dmarc=pass (p=QUARANTINE sp=QUARANTINE dis=NONE) header.from=tangerine.ca
+Return-Path: <prvs=4889bf7b6=donotreply@tangerine.ca>
+Received: from mail2.tangerine.ca (mail2.tangerine.ca. [159.18.216.16])
+        by mx.google.com with ESMTPS id a11si5989229qkn.55.2020.08.14.14.58.34
+        for <chrisharringtonbudget@gmail.com>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 14 Aug 2020 14:58:34 -0700 (PDT)
+Received-SPF: pass (google.com: domain of prvs=4889bf7b6=donotreply@tangerine.ca designates 159.18.216.16 as permitted sender) client-ip=159.18.216.16;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@tangerine.ca header.s=selector3 header.b=i+bJbHGz;
+       spf=pass (google.com: domain of prvs=4889bf7b6=donotreply@tangerine.ca designates 159.18.216.16 as permitted sender) smtp.mailfrom="prvs=4889bf7b6=donotreply@tangerine.ca";
+       dmarc=pass (p=QUARANTINE sp=QUARANTINE dis=NONE) header.from=tangerine.ca
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=tangerine.ca; i=@tangerine.ca; q=dns/txt;
+  s=selector3; t=1597442314; x=1628978314;
+  h=date:from:reply-to:to:message-id:subject:mime-version;
+  bh=+62ovv/1133IDBPlULulJfbplXUM3vvyHRoTfivmZ8M=;
+  b=i+bJbHGzvy/crcTjFSP9T/WAOlCNuBXoRq/UxIY+CaOZKNjvA63+u33C
+   aEXXCilwqnQaxsCLuXRSqVPNowQ1ODB8RGYscAr55gRgEFH/Vtvoh68FS
+   YPxGKFRMeLNmo8BxRsB4MCCL7Q7jRdEOQUIUA7sMlyScoJyqqkT78fu11
+   Y55FVhJHqloSG0Mb1EzuQLrvmK9SSe0sK2Gxv/AB3fZ6hL2jFwBscoBhI
+   8WTv0eCCAEdi0EGrVHpUYKrFYKNFqbEcKQRYSorcQ03R1vR/yI7WsWGJG
+   VPA9kl+rEOqjgVGiVIipJz461I3AzTLUvN1OMsN1LyRKjCSchijRM/+co
+   w==;
+IronPort-SDR: S+Fj66v/zssbGdiGFpwpwOs1kGe6MVrEYAAQHktLoLbv2HvbcrX/NHtHafDmE8Fl6dhEpyiVE1
+ Vb6nSGrRKuPg==
+X-IronPort-AV: E=Sophos;i="5.76,313,1592884800";
+   d="scan'208,217";a="62812265"
+Date: Fri, 14 Aug 2020 17:58:33 -0400 (EDT)
+From: Tangerine <donotreply@tangerine.ca>
+Reply-To: noreplyalerts@tangerine.ca
+To: chrisharringtonbudget@gmail.com
+Message-ID: <1597442313615-tYE28bFNEw8nmgnAYTkwjYhquPnL1O4A@tangerine.ca>
+Subject: A new Credit Card transaction has been made
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+        boundary="----=_Part_5357_1376210097.1597442313615"
+
+------=_Part_5357_1376210097.1597442313615
+MIME-Version: 1.0
+Content-Type: text/html; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<html><head><title>Tangerine</title></head><body bgcolor=3D"#eeeeee" style=
+=3D"background-color: #eeeeee; margin: 0;"><style type=3D"text/css">img {ma=
+x-width: 100%;height: auto;border:0;}.clearfix:before { display: table !imp=
+ortant; content: '' !important; line-height: 0 !important; }.clearfix:after=
+ { display: table !important; content: '' !important; line-height: 0 !impor=
+tant; }.clearfix:after { clear: both !important; }.mobile-only {display: no=
+ne;}.non-mobile-only {display: block;}@media only screen and (max-width: 50=
+0px){body {background-color: #ffffff !important;}table[class=3D"container"]=
+ {width: 100% !important;}tr[class=3D"section"] td, tr.section td {display:=
+ block !important;padding: 0 20px !important;}tr[class=3D"hero"], tr.hero {=
+display: none !important}.mobile-only {display: inherit;}.non-mobile-only {=
+display: none;}}</style><body bgcolor=3D"#EEEEEE" style=3D"background-color=
+: #eeeeee; margin: 0;"><table align=3D"center" class=3D"container" style=3D=
+"background-color: #ffffff; border-collapse: collapse; margin: 0 auto; widt=
+h: 600px"width=3D"600"><tr class=3D"section header" style=3D"padding: 25px;=
+"><td style=3D"padding: 15px;"><!--non mobile preview pane-->   <p class=3D=
+"logo" style=3D"float: left;"><img alt=3D"Tangerine Bank"src=3D"http://www.=
+tangerine.ca/images/en/en_logo.png"></p><!--non mobile social--><!--non mob=
+ile social--></td></tr> <tr class=3D"section" style=3D"padding: 25px;"><td =
+style=3D"padding: 15px;"><p style=3D"color: #666666; font-family: Arial, He=
+lvetica, sans-serif; font-size: .8em">Hi Chris, </p><p style=3D"color: #666=
+666; font-family: Arial, Helvetica, sans-serif; font-size: .8em">Just a qui=
+ck note to let you know that a transaction of $1,283.94 was made on your Ta=
+ngerine World Mastercard<sup>&#174;</sup> 5360 xxxx  xxxx 0931 at ROYAL OAK=
+ AUDI on August 14, 2020.<br><br>If you have any questions, please don't he=
+sitate to call us at 1-888-826-4374.</p><br><p style=3D"color: #666666; fon=
+t-family: Arial, Helvetica, sans-serif; font-size: .8em">Sincerely,<br>Tang=
+erine <br>Forward Banking</p></td></tr></table>----------------------------=
+------------------------------------------------------<br>ATTENTION:<br><br=
+>The information in this electronic mail message is private and confidentia=
+l, and only intended for the addressee. Should you receive this message by =
+mistake, you are hereby notified that any disclosure, reproduction, distrib=
+ution or use of this message is strictly prohibited. Please inform the send=
+er by reply transmission and delete the message without copying or opening =
+it.<br><br>Messages and attachments are scanned for all viruses known. If t=
+his message contains password-protected attachments, the files have NOT bee=
+n scanned for viruses by the Tangerine mail domain. Always scan attachments=
+ before opening them.<br><br>----------------------------------------------=
+------------------------------------<br>AVIS IMPORTANT:<br><br>Les renseign=
+ements contenus dans ce courriel sont strictement confidentiels et =E0 l'us=
+age exclusif du destinataire =E0 qui s'adresse le courriel. Si vous recevez=
+ ce message par erreur, vous =EAtes par la pr=E9sente avis=E9(e) que toute =
+divulgation, diffusion, distribution ou reproduction de la pr=E9sente commu=
+nication est strictement interdite. Veuillez imm=E9diatement informer l'exp=
+=E9diteur par retour de courriel et d=E9truire le message, ainsi que tous l=
+es fichiers joints qu'il comporte, sans le copier ou l'ouvrir.<br><br>Tous =
+les messages =E9lectroniques et fichiers joints sont analys=E9s pour d=E9te=
+cter les virus =E9lectroniques connus. Si ce message contient des fichiers =
+joints prot=E9g=E9s par des mots de passe, ces fichiers n'ont PAS =E9t=E9 a=
+nalys=E9s pour d=E9tecter la pr=E9sence de virus par le domaine de courrier=
+ de Tangerine. Analysez toujours un fichier joint avant de l'ouvrir.<br>---=
+---------------------------------------------------------------------------=
+----<font size=3D"3"><span  style=3D"font-family: Calibri;"><o:p></o:p></sp=
+an></font></body></html>
+------=_Part_5357_1376210097.1597442313615--

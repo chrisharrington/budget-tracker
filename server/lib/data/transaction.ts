@@ -17,10 +17,13 @@ class TransactionService extends Base<Transaction> {
     }
 
     async getForWeek(date: Date) : Promise<Transaction[]> {
+        const start = dayjs(date).startOf('week').add(1, 'day').toDate(),
+            end = dayjs(start).add(1, 'week').subtract(1, 'second').toDate();
+
         return await this.find({
             date: {
-                $gte: dayjs(date).add(1, 'day').startOf('week').toDate(),
-                $lte: dayjs(date).add(1, 'day').endOf('week').toDate()
+                $gte: start,
+                $lte: end
             }
         }, { date: -1 });
     }

@@ -2,7 +2,7 @@ import { Application, Request, Response } from 'express';
 import dayjs from 'dayjs';
 
 import Config from '@lib/config';
-import TransactionService from '@lib/data/budget';
+import TransactionService from '@lib/data/transaction';
 import { Budget, Transaction } from '@lib/models';
 
 export default class BudgetRoute {
