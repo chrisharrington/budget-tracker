@@ -1,4 +1,4 @@
-import { BudgetItem } from '@lib/models';
+import { Transaction } from '@lib/models';
 import dayjs from 'dayjs-ext';
 
 import { Base } from './base';
@@ -7,29 +7,29 @@ import timeZonePlugin from 'dayjs-ext/plugin/timeZone';
 
 dayjs.extend(timeZonePlugin);
 
-class BudgetService extends Base<BudgetItem> {
+class TransactionService extends Base<Transaction> {
     constructor() {
-        super('budgetItems');
+        super('transactions');
     }
 
-    async get(id: number) : Promise<BudgetItem[]> {
+    async get(id: number) : Promise<Transaction[]> {
         return await this.find({ id });
     }
 
-    async getForWeek(date: Date) : Promise<BudgetItem[]> {
+    async getForWeek(date: Date) : Promise<Transaction[]> {
         return await this.find({
             date: {
-                $gte: dayjs(date).add(1, 'd').startOf('w').toDate(),
-                $lte: dayjs(date).add(1, 'd').endOf('w').toDate()
+                $gte: dayjs(date).add(1, 'day').startOf('week').toDate(),
+                $lte: dayjs(date).add(1, 'day').endOf('week').toDate()
             }
         }, { date: -1 });
     }
 
-    async save(items: BudgetItem[]) : Promise<void> {
-        await Promise.all(items.map((item: BudgetItem) => (
+    async save(items: Transaction[]) : Promise<void> {
+        await Promise.all(items.map((item: Transaction) => (
             this.updateOne(item)
         )));
     }
 }
 
-export default new BudgetService();
+export default new TransactionService();
