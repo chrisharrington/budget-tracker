@@ -3,9 +3,9 @@ import dayjs from 'dayjs';
 
 import Config from '@lib/config';
 import BudgetService from '@lib/data/budget';
-import { BudgetItem } from '@lib/models';
+import { Budget, BudgetItem } from '@lib/models';
 
-export default class Budget {
+export default class BudgetRoute {
     static initialize(app: Application) {
         app.get('/', this.getCurrentBudget.bind(this));
     }
@@ -14,16 +14,16 @@ export default class Budget {
         try {
             console.log('Request received: GET /');
             
-            const current = await BudgetService.getForWeek(new Date()),
-                last = await BudgetService.getForWeek(dayjs().startOf('w').subtract(1, 'd').toDate());
+            const current = await BudgetService.getForWeek(dayjs().startOf('w').toDate()),
+                last = await BudgetService.getForWeek(dayjs().subtract(1, 'w').startOf('w').toDate());
 
-            response.status(200).send({
+            response.status(200).send(new Budget({
                 weeklyAmount: Config.weeklyAmount,
                 lastWeekRemaining: Config.weeklyAmount - last
                     .map((l: BudgetItem) => l.amount)
                     .reduce((amount: number, sum: number) => sum + amount, 0),
                 items: current
-            });
+            }));
         } catch (e) {
             console.log('Request failed: GET /');
             console.error(e);

@@ -1,7 +1,11 @@
 import { BudgetItem } from '@lib/models';
-import dayjs from 'dayjs';
+import dayjs from 'dayjs-ext';
 
 import { Base } from './base';
+
+import timeZonePlugin from 'dayjs-ext/plugin/timeZone';
+
+dayjs.extend(timeZonePlugin);
 
 class BudgetService extends Base<BudgetItem> {
     constructor() {
@@ -15,8 +19,8 @@ class BudgetService extends Base<BudgetItem> {
     async getForWeek(date: Date) : Promise<BudgetItem[]> {
         return await this.find({
             date: {
-                $gte: dayjs(date).startOf('w').toDate(),
-                $lte: dayjs(date).endOf('w').toDate()
+                $gte: dayjs(date).add(1, 'd').startOf('w').toDate(),
+                $lte: dayjs(date).add(1, 'd').endOf('w').toDate()
             }
         }, { date: -1 });
     }

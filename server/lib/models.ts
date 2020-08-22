@@ -2,6 +2,16 @@ export class Id {
     _id: string;
 }
 
+export class Budget {
+    weeklyAmount: number;
+    lastWeekRemaining: number;
+    items: BudgetItem[];
+    
+    constructor(initializer: Partial<Budget>) {
+        Object.assign(this, initializer);
+    }
+}
+
 export class BudgetItem extends Id {
     amount: number;
     date: Date;
