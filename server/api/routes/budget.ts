@@ -1,9 +1,13 @@
 import { Application, Request, Response } from 'express';
-import dayjs from 'dayjs';
+import dayjs from 'dayjs-ext';
 
 import Config from '@lib/config';
 import TransactionService from '@lib/data/transaction';
 import { Budget, Transaction } from '@lib/models';
+
+import timeZonePlugin from 'dayjs-ext/plugin/timeZone';
+
+dayjs.extend(timeZonePlugin);
 
 export default class BudgetRoute {
     static initialize(app: Application) {
@@ -15,13 +19,14 @@ export default class BudgetRoute {
         try {
             console.log('Request received: GET /');
             
-            const current = await TransactionService.getForWeek(dayjs().startOf('w').toDate()),
-                last = await TransactionService.getForWeek(dayjs().subtract(1, 'w').startOf('w').toDate());
+            const current = await TransactionService.getForWeek(dayjs().toDate()),
+                last = await TransactionService.getForWeek(dayjs().subtract(1, 'week').toDate());
 
             response.status(200).send(new Budget({
                 weeklyAmount: Config.weeklyAmount,
                 lastWeekRemaining: Config.weeklyAmount - last
-                    .map((l: Transaction) => l.amount)
+                    .filter((transaction: Transaction) => !transaction.ignored)
+                    .map((transaction: Transaction) => transaction.amount)
                     .reduce((amount: number, sum: number) => sum + amount, 0),
                 transactions: current
             }));

@@ -1,9 +1,11 @@
-import { Transaction } from '@lib/models';
 import dayjs from 'dayjs-ext';
+import timeZonePlugin from 'dayjs-ext/plugin/timeZone';
+import getTimezoneOffset from 'get-timezone-offset';
 
 import { Base } from './base';
 
-import timeZonePlugin from 'dayjs-ext/plugin/timeZone';
+import { Transaction } from '@lib/models';
+
 
 dayjs.extend(timeZonePlugin);
 
@@ -17,7 +19,8 @@ class TransactionService extends Base<Transaction> {
     }
 
     async getForWeek(date: Date) : Promise<Transaction[]> {
-        const start = dayjs(date).startOf('week').add(1, 'day').toDate(),
+        const offset = getTimezoneOffset('America/Edmonton'),
+            start = dayjs(date).subtract(offset, 'minute').startOf('week').add(1, 'day').toDate(),
             end = dayjs(start).add(1, 'week').subtract(1, 'second').toDate();
 
         return await this.find({

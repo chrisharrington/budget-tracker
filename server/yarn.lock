@@ -610,6 +610,11 @@ get-stream@^5.1.0:
   dependencies:
     pump "^3.0.0"
 
+get-timezone-offset@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/get-timezone-offset/-/get-timezone-offset-1.0.4.tgz#0ea8320b6d52dee6491ee0b9c4691f122169fc10"
+  integrity sha512-fN1Nlr2dX8u+Tn4Rrbpoy4HKW6gB6TnkK0aIuLnzIw0thxdamNTZJrutF+7PmUIKDxMJJcQhTBM392uTBsDwnQ==
+
 glob-parent@~5.1.0:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/glob-parent/-/glob-parent-5.1.1.tgz#b6c1ef417c4e5663ea498f1c45afac6916bbc229"
