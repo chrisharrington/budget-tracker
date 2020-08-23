@@ -7,6 +7,7 @@ import bodyParser from 'body-parser';
 import Secret from '@lib/secret';
 
 import Budget from '@api/routes/budget';
+import Device from '@api/routes/device';
 
 class Server {
     private port: number;
@@ -22,6 +23,7 @@ class Server {
         app.use(this.auth);
 
         Budget.initialize(app);
+        Device.initialize(app);
 
         app.listen(this.port, () => console.log(`Listening on port ${this.port}...`));        
     }

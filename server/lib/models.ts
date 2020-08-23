@@ -5,6 +5,17 @@ export class Id {
     _id: string;
 }
 
+export class Device extends Id {
+    token: string;
+
+    static fromRaw(raw: any) : Device {
+        const device = new Device();
+        device._id = raw._id;
+        device.token = raw.token;
+        return device;
+    }
+}
+
 export class Budget {
     weeklyAmount: number;
     lastWeekRemaining: number;
