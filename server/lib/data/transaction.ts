@@ -1,4 +1,4 @@
-import dayjs from 'dayjs-ext';
+import dayjs from 'dayjs';
 import timeZonePlugin from 'dayjs-ext/plugin/timeZone';
 import getTimezoneOffset from 'get-timezone-offset';
 
@@ -19,14 +19,14 @@ class TransactionService extends Base<Transaction> {
     }
 
     async getForWeek(date: Date) : Promise<Transaction[]> {
-        const offset = getTimezoneOffset('America/Edmonton'),
-            start = dayjs(date).subtract(offset, 'minute').startOf('week').add(1, 'day').toDate(),
-            end = dayjs(start).add(1, 'week').subtract(1, 'second').toDate();
+        let start = dayjs(date).subtract(getTimezoneOffset('America/Edmonton'), 'minute').startOf('day');
+        while (start.day() !== 1)
+            start = start.subtract(1, 'day');
 
         return await this.find({
             date: {
-                $gte: start,
-                $lte: end
+                $gte: start.toDate(),
+                $lte: dayjs(start).add(1, 'week').subtract(1, 'second').toDate()
             }
         }, { date: -1 });
     }
