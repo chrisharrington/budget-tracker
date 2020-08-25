@@ -5,6 +5,7 @@ import { Transaction } from '@lib/models';
 import TransactionService from '@lib/data/transaction';
 
 import Inbox from './inbox';
+import Notifications from './notifications';
 
 (async () => {
     try {
@@ -17,13 +18,19 @@ import Inbox from './inbox';
                 const transaction = Transaction.fromString(message);
                 console.log(`Built transaction: ${JSON.stringify(transaction)}`);
 
-                await TransactionService.insertOne(transaction);
-                console.log('Transaction saved.');
+                await Promise.all([
+                    TransactionService.insertOne(transaction), 
+                    Notifications.send(transaction)
+                ]);
+
+                console.log('Transaction saved and notification sent.');
             } catch (e) {
                 console.log('Transaction failed to save.');
                 console.error(e);
             }
         });
+
+        console.log('Listening for messages...');
     } catch (e) {
         console.error(e);
     }

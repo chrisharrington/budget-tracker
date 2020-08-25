@@ -52,6 +52,9 @@ export default class Inbox {
             if (error)
                 throw error;
             else {
+                if (!messageIds.length)
+                    return;
+                    
                 this.imap.setFlags(messageIds, ['\\Seen'], (error: Error) => {
                     if (error)
                         throw error;
