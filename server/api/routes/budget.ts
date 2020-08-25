@@ -1,5 +1,5 @@
 import { Application, Request, Response } from 'express';
-import dayjs from 'dayjs-ext';
+import dayjs from 'dayjs';
 
 import Config from '@lib/config';
 import TransactionService from '@lib/data/transaction';
@@ -12,6 +12,7 @@ dayjs.extend(timeZonePlugin);
 export default class BudgetRoute {
     static initialize(app: Application) {
         app.get('/', this.getCurrentBudget.bind(this));
+        app.get('/history', this.getHistory.bind(this));
         app.post('/transaction', this.updateTransaction.bind(this));
     }
 
@@ -32,6 +33,39 @@ export default class BudgetRoute {
             }));
         } catch (e) {
             console.log('Request failed: GET /');
+            console.error(e);
+            response.status(500).send(e);
+        }
+    }
+
+    private static async getHistory(_: Request, response: Response) {
+        try {
+            console.log('Request received: GET /history');
+        
+            const transactions = await TransactionService.find({ ignored: false }),
+                dict = {};
+
+            transactions.forEach((transaction: Transaction) => {
+                let week = dayjs(transaction.date);
+                while (week.day() !== 1)
+                    week = week.subtract(1, 'day');
+
+                const weekLabel = week.format();
+                if (!dict[weekLabel])
+                    dict[weekLabel] = {
+                        balance: Config.weeklyAmount
+                    };
+
+                dict[weekLabel].balance -= transaction.amount;
+            });
+
+            const history = Object.keys(dict)
+                .map((key: string) => ({ date: dayjs(key).toDate(), balance: dict[key].balance }))
+                .sort((first, second) => dayjs(first.date).isBefore(second.date) ? 1 : -1);
+
+            response.status(200).send(history);
+        } catch (e) {
+            console.log('Request failed: GET /history');
             console.error(e);
             response.status(500).send(e);
         }
