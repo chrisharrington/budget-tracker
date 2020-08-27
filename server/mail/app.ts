@@ -32,6 +32,7 @@ import Notifications from './notifications';
 
         console.log('Listening for messages...');
     } catch (e) {
+        console.log('Error during message handling.');
         console.error(e);
     }
 })();

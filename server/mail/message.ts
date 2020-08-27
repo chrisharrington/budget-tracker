@@ -6,8 +6,6 @@ export default class Message {
     static async fromImap(imap: any) : Promise<string> {
         return new Promise<string>(resolve => {
             imap.on('message', message => {
-                console.log('message received');
-
                 const parser = new MailParser();
 
                 parser.on('end', mail => {
