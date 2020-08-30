@@ -1,12 +1,13 @@
 import Imap from 'imap';
 import { Stream } from 'stream';
 import { MailParser } from 'mailparser-mit';
+import dayjs from 'dayjs';
 
 import Message from './message';
 
 export default class Inbox {
     private imap: Imap;
-    private onMessageCallback: (message: Message) => void;
+    private onMessageCallback: (message: Message, date: Date) => void;
     private ready: Promise<void>;
 
     constructor(emailAddress: string, password: string) {
@@ -35,14 +36,15 @@ export default class Inbox {
             });
 
             this.imap.on('mail', async () => {
+                console.log('IMAP mail event triggered.');
                 await this.unread();
             });
         });
 
-        this.imap.connect(); 
+        this.imap.connect();
     }
 
-    onMessage(callback: (message: string) => void) {
+    onMessage(callback: (message: string, date: Date) => void) {
         this.onMessageCallback = callback;
     }
 
@@ -50,34 +52,39 @@ export default class Inbox {
         await this.ready;
 
         this.imap.search(['UNSEEN'], async (error: Error, messageIds) => {
-            if (error)
+            if (error) {
+                console.error(error);
                 throw error;
-            else {
-                if (!messageIds.length)
+            } else {
+                if (!messageIds.length) {
+                    console.log('No message IDs found, so doing nothing.');
                     return;
+                }
+
+                const fetch = this.imap.fetch(messageIds, { bodies: '' });
+                fetch.on('message', message => {
+                    const parser = new MailParser();
+    
+                    parser.once('end', mail => {
+                        if (this.onMessageCallback && mail.subject === 'A new Credit Card transaction has been made') {
+                            console.log('Transaction email received.');
+                            this.onMessageCallback(mail.html, dayjs(mail.receivedDate).toDate());
+                        }
+                    });
+    
+                    message.on('body', (stream: Stream) => {
+                        stream.pipe(parser);
+                    });
+    
+                    message.once('end', () => {
+                        parser.end();
+                    });
+                });
                     
                 this.imap.setFlags(messageIds, ['\\Seen'], (error: Error) => {
-                    if (error)
+                    if (error) {
+                        console.error(error);
                         throw error;
-                    else {
-                        const fetch = this.imap.fetch(messageIds, { bodies: '' });
-
-                        fetch.on('message', message => {
-                            const parser = new MailParser();
-            
-                            parser.once('end', mail => {
-                                if (this.onMessageCallback && mail.subject === 'A new Credit Card transaction has been made')
-                                    this.onMessageCallback(mail.html);
-                            });
-            
-                            message.on('body', async (stream: Stream) => {
-                                stream.pipe(parser);
-                            });
-            
-                            message.once('end', () => {
-                                parser.end();
-                            });
-                        });
                     }
                 });
             }

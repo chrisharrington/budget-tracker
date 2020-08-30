@@ -11,17 +11,12 @@ import Notifications from './notifications';
     try {
         const inbox = new Inbox(Secret.mailEmailAddress, Secret.mailPassword);
 
-        inbox.onMessage(async (message: string) => {
+        inbox.onMessage(async (message: string, date: Date) => {
             try {
                 console.log(`Message received.`);
 
-                const transaction = Transaction.fromString(message);
+                const transaction = Transaction.fromMessage(message, date);
                 console.log(`Built transaction: ${JSON.stringify(transaction)}`);
-
-                await Promise.all([
-                    TransactionService.insertOne(transaction), 
-                    Notifications.send(transaction)
-                ]);
 
                 console.log('Transaction saved and notification sent.');
             } catch (e) {

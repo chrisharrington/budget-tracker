@@ -44,7 +44,7 @@ export class Transaction extends Id {
         return transaction;
     }
 
-    static fromString(raw: string) : Transaction {
+    static fromMessage(raw: string, date: Date) : Transaction {
         let parsed = raw.substring(raw.indexOf('$'));
         const words = parsed
             .substring(0, parsed.indexOf('<br><br>'))
@@ -56,7 +56,7 @@ export class Transaction extends Id {
 
         const transaction = new Transaction();
         transaction.amount = parseFloat(words[0].replace('$', '').replace(',', ''));
-        transaction.date = dayjs(words.slice(words.length - 3).join(' ').replace(',', '').replace('.', ''), 'MMMM D YYYY').add(getTimezoneOffset('America/Edmonton'), 'minute').toDate();
+        transaction.date = date;
         transaction.description = words.slice(words.indexOf('at')+1, words.lastIndexOf('on')).join(' ');
         transaction.owner = parsed.indexOf('0931') > -1 ? 'Sarah' : 'Chris';
         transaction.ignored = false;
