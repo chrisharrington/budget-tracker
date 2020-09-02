@@ -23,7 +23,8 @@ export default class Inbox {
 
             this.imap.once('error', error => {
                 console.log('IMAP reported error.');
-                console.error(reject(error));
+                console.error(error);
+                reject(error);
             });
 
             this.imap.once('ready', () => {

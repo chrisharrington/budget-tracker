@@ -18,6 +18,10 @@ import Notifications from './notifications';
                 const transaction = Transaction.fromMessage(message, date);
                 console.log(`Built transaction: ${JSON.stringify(transaction)}`);
 
+                await Promise.all([
+                    Notifications.send(transaction),
+                    TransactionService.insertOne(transaction)
+                ]);
                 console.log('Transaction saved and notification sent.');
             } catch (e) {
                 console.log('Transaction failed to save.');

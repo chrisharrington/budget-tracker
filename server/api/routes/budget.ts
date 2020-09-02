@@ -46,7 +46,7 @@ export default class BudgetRoute {
                 dict = {};
 
             transactions.forEach((transaction: Transaction) => {
-                let week = dayjs(transaction.date);
+                let week = dayjs(transaction.date).startOf('day');
                 while (week.day() !== 1)
                     week = week.subtract(1, 'day');
 
