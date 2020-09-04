@@ -9,40 +9,14 @@ export default class Inbox {
     private imap: Imap;
     private onMessageCallback: (message: Message, date: Date) => void;
     private ready: Promise<void>;
+    private emailAddress: string;
+    private password: string;
 
     constructor(emailAddress: string, password: string) {
-        this.ready = new Promise((resolve, reject) => {
-            this.imap = new Imap({
-                user: emailAddress,
-                password,
-                host: 'imap.gmail.com',
-                port: 993,
-                tls: true,
-                tlsOptions: { rejectUnauthorized: false }
-            });
+        this.emailAddress = emailAddress;
+        this.password = password;
 
-            this.imap.once('error', error => {
-                console.log('IMAP reported error.');
-                console.error(error);
-                reject(error);
-            });
-
-            this.imap.once('ready', () => {
-                this.imap.openBox('INBOX', false, error => {
-                    if (error)
-                        reject(error);
-                    else
-                        resolve();
-                });
-            });
-
-            this.imap.on('mail', async () => {
-                console.log('IMAP mail event triggered.');
-                await this.unread();
-            });
-        });
-
-        this.imap.connect();
+        this.connect();
     }
 
     onMessage(callback: (message: string, date: Date) => void) {
@@ -90,5 +64,44 @@ export default class Inbox {
                 });
             }
         });
+    }
+
+    private async connect() {
+        this.ready = new Promise((resolve, reject) => {
+            this.imap = new Imap({
+                user: this.emailAddress,
+                password: this.password,
+                host: 'imap.gmail.com',
+                port: 993,
+                tls: true,
+                tlsOptions: { rejectUnauthorized: false }
+            });
+
+            this.imap.once('error', async (error: Error) => {
+                if (error.message.indexOf('This socket has been ended by the other party') > -1) {
+                    await this.connect();
+                } else {
+                    console.log('IMAP reported error.');
+                    console.error(error);
+                    reject(error);
+                }
+            });
+
+            this.imap.once('ready', () => {
+                this.imap.openBox('INBOX', false, error => {
+                    if (error)
+                        reject(error);
+                    else
+                        resolve();
+                });
+            });
+
+            this.imap.on('mail', async () => {
+                console.log('IMAP mail event triggered.');
+                await this.unread();
+            });
+        });
+
+        this.imap.connect();
     }
 }
