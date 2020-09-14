@@ -13,25 +13,25 @@ import Notifications from './notifications';
 
         inbox.onMessage(async (message: string, date: Date) => {
             try {
-                console.log(`Message received.`);
+                console.log(`[mail] Message received.`);
 
                 const transaction = Transaction.fromMessage(message, date);
-                console.log(`Built transaction: ${JSON.stringify(transaction)}`);
+                console.log(`[mail] Built transaction: ${JSON.stringify(transaction)}`);
 
                 await Promise.all([
                     Notifications.send(transaction),
                     TransactionService.insertOne(transaction)
                 ]);
-                console.log('Transaction saved and notification sent.');
+                console.log('[mail] Transaction saved and notification sent.');
             } catch (e) {
-                console.log('Transaction failed to save.');
+                console.log('[mail] Transaction failed to save.');
                 console.error(e);
             }
         });
 
-        console.log('Listening for messages...');
+        console.log('[mail] Listening for messages...');
     } catch (e) {
-        console.log('Error during message handling.');
+        console.log('[mail] Error during message handling.');
         console.error(e);
     }
 })();

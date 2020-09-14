@@ -5,6 +5,8 @@ import dayjs from 'dayjs';
 
 import Message from './message';
 
+const HOURS: number = 1;
+
 export default class Inbox {
     private imap: Imap;
     private onMessageCallback: (message: Message, date: Date) => void;
@@ -17,6 +19,8 @@ export default class Inbox {
         this.password = password;
 
         this.connect();
+        
+        setInterval(() => this.connect(), HOURS*60*60*1000);
     }
 
     onMessage(callback: (message: string, date: Date) => void) {
@@ -26,13 +30,14 @@ export default class Inbox {
     async unread() : Promise<void> {
         await this.ready;
 
+        console.log('[mail] Searching for unread messages.');
         this.imap.search(['UNSEEN'], async (error: Error, messageIds) => {
             if (error) {
                 console.error(error);
                 throw error;
             } else {
                 if (!messageIds.length) {
-                    console.log('No message IDs found, so doing nothing.');
+                    console.log('[mail] No unread messages found.');
                     return;
                 }
 
@@ -42,7 +47,7 @@ export default class Inbox {
     
                     parser.once('end', mail => {
                         if (this.onMessageCallback && mail.subject === 'A new Credit Card transaction has been made') {
-                            console.log('Transaction email received.');
+                            console.log('[mail] Transaction email received.');
                             this.onMessageCallback(mail.html, dayjs(mail.receivedDate).toDate());
                         }
                     });
@@ -57,6 +62,7 @@ export default class Inbox {
                 });
                     
                 this.imap.setFlags(messageIds, ['\\Seen'], (error: Error) => {
+                    console.log('[mail] Marking unread messages as read.');
                     if (error) {
                         console.error(error);
                         throw error;
@@ -67,6 +73,7 @@ export default class Inbox {
     }
 
     private async connect() {
+        console.log('[mail] Connecting...');
         this.ready = new Promise((resolve, reject) => {
             this.imap = new Imap({
                 user: this.emailAddress,
@@ -77,17 +84,19 @@ export default class Inbox {
                 tlsOptions: { rejectUnauthorized: false }
             });
 
-            this.imap.once('error', async (error: Error) => {
+            this.imap.on('error', async (error: Error) => {
                 if (error.message.indexOf('This socket has been ended by the other party') > -1) {
+                    console.log('[mail] Socket terminated. Reconnecting...');
                     await this.connect();
                 } else {
-                    console.log('IMAP reported error.');
+                    console.log('[mail] IMAP reported error.');
                     console.error(error);
                     reject(error);
                 }
             });
 
             this.imap.once('ready', () => {
+                console.log('[mail] Ready.')
                 this.imap.openBox('INBOX', false, error => {
                     if (error)
                         reject(error);
@@ -97,7 +106,7 @@ export default class Inbox {
             });
 
             this.imap.on('mail', async () => {
-                console.log('IMAP mail event triggered.');
+                console.log('[mail] Mail event triggered.');
                 await this.unread();
             });
         });
