@@ -20,14 +20,61 @@ export default class Inbox {
 
         this.connect();
         
-        setInterval(() => this.connect(), HOURS*60*60*1000);
+        setInterval(() => this.connect(true), HOURS*60*60*1000);
     }
 
     onMessage(callback: (message: string, date: Date) => void) {
         this.onMessageCallback = callback;
     }
 
-    async unread() : Promise<void> {
+    private async connect(disconnect: boolean = false) {
+        if (disconnect) {
+            console.log('[mail] Disconnected.');
+            this.imap.end();
+        }
+
+        console.log('[mail] Connecting...');
+        this.ready = new Promise((resolve, reject) => {
+            this.imap = new Imap({
+                user: this.emailAddress,
+                password: this.password,
+                host: 'imap.gmail.com',
+                port: 993,
+                tls: true,
+                tlsOptions: { rejectUnauthorized: false }
+            });
+
+            this.imap.on('error', async (error: Error) => {
+                if (error.message.indexOf('This socket has been ended by the other party') > -1) {
+                    console.log('[mail] Socket terminated. Reconnecting...');
+                    await this.connect();
+                } else {
+                    console.log('[mail] IMAP reported error.');
+                    console.error(error);
+                    reject(error);
+                }
+            });
+
+            this.imap.once('ready', () => {
+                console.log('[mail] Ready.')
+                this.imap.openBox('INBOX', false, error => {
+                    if (error)
+                        reject(error);
+                    else
+                        resolve();
+                });
+            });
+
+            this.imap.on('mail', async () => {
+                console.log('[mail] Mail event triggered.');
+                await this.unread();
+            });
+        });
+
+        this.imap.connect();
+    }
+
+    private async unread() : Promise<void> {
         await this.ready;
 
         console.log('[mail] Searching for unread messages.');
@@ -70,47 +117,5 @@ export default class Inbox {
                 });
             }
         });
-    }
-
-    private async connect() {
-        console.log('[mail] Connecting...');
-        this.ready = new Promise((resolve, reject) => {
-            this.imap = new Imap({
-                user: this.emailAddress,
-                password: this.password,
-                host: 'imap.gmail.com',
-                port: 993,
-                tls: true,
-                tlsOptions: { rejectUnauthorized: false }
-            });
-
-            this.imap.on('error', async (error: Error) => {
-                if (error.message.indexOf('This socket has been ended by the other party') > -1) {
-                    console.log('[mail] Socket terminated. Reconnecting...');
-                    await this.connect();
-                } else {
-                    console.log('[mail] IMAP reported error.');
-                    console.error(error);
-                    reject(error);
-                }
-            });
-
-            this.imap.once('ready', () => {
-                console.log('[mail] Ready.')
-                this.imap.openBox('INBOX', false, error => {
-                    if (error)
-                        reject(error);
-                    else
-                        resolve();
-                });
-            });
-
-            this.imap.on('mail', async () => {
-                console.log('[mail] Mail event triggered.');
-                await this.unread();
-            });
-        });
-
-        this.imap.connect();
     }
 }

@@ -9,6 +9,7 @@ import Secret from '@lib/secret';
 import Budget from '@api/routes/budget';
 import Device from '@api/routes/device';
 
+
 class Server {
     private port: number;
 
@@ -25,7 +26,7 @@ class Server {
         Budget.initialize(app);
         Device.initialize(app);
 
-        app.listen(this.port, () => console.log(`Listening on port ${this.port}...`));        
+        app.listen(this.port, () => console.log(`Listening on port ${this.port}...`));
     }
 
     private auth(request: Request, response: Response, next: any) {

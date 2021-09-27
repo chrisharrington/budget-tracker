@@ -21,11 +21,12 @@ export default class BudgetRoute {
             console.log('Request received: GET /');
             
             const current = await TransactionService.getForWeek(dayjs().toDate()),
-                last = await TransactionService.getForWeek(dayjs().subtract(1, 'week').toDate());
+                last = await TransactionService.getForWeek(dayjs().subtract(1, 'week').toDate()),
+                weeklyAmount = Config.weeklyAmount(new Date());
 
             response.status(200).send(new Budget({
-                weeklyAmount: Config.weeklyAmount,
-                lastWeekRemaining: Config.weeklyAmount - last
+                weeklyAmount,
+                lastWeekRemaining: weeklyAmount - last
                     .filter((transaction: Transaction) => !transaction.ignored)
                     .map((transaction: Transaction) => transaction.amount)
                     .reduce((amount: number, sum: number) => sum + amount, 0),
@@ -53,7 +54,7 @@ export default class BudgetRoute {
                 const weekLabel = week.format();
                 if (!dict[weekLabel])
                     dict[weekLabel] = {
-                        balance: Config.weeklyAmount
+                        balance: Config.weeklyAmount(week.toDate())
                     };
 
                 dict[weekLabel].balance -= transaction.amount;
