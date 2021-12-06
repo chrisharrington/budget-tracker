@@ -19,14 +19,14 @@ class TransactionService extends Base<Transaction> {
     }
 
     async getForWeek(date: Date) : Promise<Transaction[]> {
-        let start = dayjs(date).subtract(getTimezoneOffset('America/Edmonton'), 'minute').startOf('day');
-        while (start.day() !== 1)
-            start = start.subtract(1, 'day');
+        const offset = getTimezoneOffset('America/Edmonton'),
+            start = dayjs(date).add(offset, 'minute',).toDate(),
+            end = dayjs(date).add(offset, 'minute').add(1, 'week').subtract(1, 'second').toDate();
 
         return await this.find({
             date: {
-                $gte: start.toDate(),
-                $lte: dayjs(start).add(1, 'week').subtract(1, 'second').toDate()
+                $gte: start,
+                $lte: end
             }
         }, { date: -1 });
     }

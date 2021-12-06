@@ -17,6 +17,7 @@ export class Device extends Id {
 }
 
 export class Budget {
+    date: Date;
     weeklyAmount: number;
     lastWeekRemaining: number;
     transactions: Transaction[];
@@ -32,6 +33,12 @@ export class Transaction extends Id {
     description: string;
     owner: string;
     ignored: boolean;
+    tags: Tag[];
+
+    constructor() {
+        super();
+        this.tags = [];
+    }
 
     static fromRaw(raw: any) : Transaction {
         const transaction = new Transaction();
@@ -41,6 +48,7 @@ export class Transaction extends Id {
         transaction.description = raw.description;
         transaction.owner = raw.owner;
         transaction.ignored = raw.ignored;
+        transaction.tags = raw.tags || [];
         return transaction;
     }
 
@@ -62,4 +70,22 @@ export class Transaction extends Id {
         transaction.ignored = false;
         return transaction;
     }
+    
+    static copy(t: Transaction) : Transaction {
+        const copy = new Transaction();
+        copy.amount = t.amount;
+        copy.date = t.date;
+        copy.description = t.description;
+        copy.owner = t.owner;
+        copy.ignored = t.ignored;
+        copy.tags = [...t.tags];
+        return copy;
+    }
+}
+
+export class Tag extends Id {
+    name: string;
+    ignore: boolean;
+    defaults: string[];
+    updated: Date
 }

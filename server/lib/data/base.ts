@@ -33,13 +33,15 @@ export class Base<TModel> {
         return result[0];
     }
 
-    public async find(query: any, sort?: any) : Promise<TModel[]> {
+    public async find(query: any, sort?: any, limit?: number) : Promise<TModel[]> {
         let collection = await this.connect();
 
         return new Promise<TModel[]>((resolve, reject) => {
             let q = collection.find(query);
             if (sort)
                 q = q.sort(sort);
+            if (limit)
+                q = q.limit(limit);
             q.toArray((error, result) => {
                 if (error) reject(error);
                 else resolve(result);

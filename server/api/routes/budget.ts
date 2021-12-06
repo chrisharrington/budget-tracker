@@ -1,5 +1,6 @@
 import { Application, Request, Response } from 'express';
 import dayjs from 'dayjs';
+import getTimezoneOffset from 'get-timezone-offset';
 
 import Config from '@lib/config';
 import TransactionService from '@lib/data/transaction';
@@ -12,8 +13,10 @@ dayjs.extend(timeZonePlugin);
 export default class BudgetRoute {
     static initialize(app: Application) {
         app.get('/', this.getCurrentBudget.bind(this));
+        app.get('/week', this.getBudgetForWeek.bind(this));
         app.get('/history', this.getHistory.bind(this));
         app.post('/transaction', this.updateTransaction.bind(this));
+        app.post('/transaction/split', this.splitTransaction.bind(this));
     }
 
     private static async getCurrentBudget(_: Request, response: Response) {
@@ -39,6 +42,33 @@ export default class BudgetRoute {
         }
     }
 
+    private static async getBudgetForWeek(request: Request, response: Response) {
+        try {
+            console.log('Request received: GET /week');
+
+            if (!request.query || !request.query.date)
+                throw new Error('Missing date parameter in query string.');
+
+            let current = dayjs(request.query.date as string, 'YYYY-MM-DD').startOf('day');
+            while (current.day() !== 1)
+                current = current.subtract(1, 'day');
+
+            const date = current.toDate(),
+                transactions = await TransactionService.getForWeek(date),
+                weeklyAmount = Config.weeklyAmount(date);
+
+            response.status(200).send(new Budget({
+                date,
+                weeklyAmount,
+                transactions
+            }));
+        } catch (e) {
+            console.log('Request failed: GET /week');
+            console.error(e);
+            response.status(500).send(e);
+        }
+    }
+
     private static async getHistory(_: Request, response: Response) {
         try {
             console.log('Request received: GET /history');
@@ -47,7 +77,7 @@ export default class BudgetRoute {
                 dict = {};
 
             transactions.forEach((transaction: Transaction) => {
-                let week = dayjs(transaction.date).startOf('day');
+                let week = dayjs(transaction.date).subtract(getTimezoneOffset('America/Edmonton'), 'minute').startOf('day');
                 while (week.day() !== 1)
                     week = week.subtract(1, 'day');
 
@@ -81,6 +111,30 @@ export default class BudgetRoute {
             response.sendStatus(200);
         } catch (e) {
             console.log('Request failed: POST /transaction');
+            console.error(e);
+            response.status(500).send(e);
+        }
+    }
+
+    private static async splitTransaction(request: Request, response: Response) {
+        try {
+            console.log('Request received: POST /transaction/split');
+
+            const transaction = Transaction.fromRaw(request.body.transaction),
+                newAmount = request.body.newAmount,
+                copy = Transaction.copy(transaction);
+
+            transaction.amount -= newAmount;
+            copy.amount = newAmount;
+
+            await Promise.all([
+                TransactionService.updateOne(transaction),
+                TransactionService.insertOne(copy)
+            ]);
+
+            response.sendStatus(200);
+        } catch (e) {
+            console.log('Request failed: POST /transaction/split');
             console.error(e);
             response.status(500).send(e);
         }

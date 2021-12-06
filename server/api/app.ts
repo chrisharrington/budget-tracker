@@ -8,6 +8,7 @@ import Secret from '@lib/secret';
 
 import Budget from '@api/routes/budget';
 import Device from '@api/routes/device';
+import Tags from '@api/routes/tags';
 
 
 class Server {
@@ -25,6 +26,7 @@ class Server {
 
         Budget.initialize(app);
         Device.initialize(app);
+        Tags.initialize(app);
 
         app.listen(this.port, () => console.log(`Listening on port ${this.port}...`));
     }
