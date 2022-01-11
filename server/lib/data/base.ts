@@ -28,8 +28,8 @@ export class Base<TModel> {
         return await this.findOne({ _id: new ObjectID(id) });
     }
 
-    public async findOne(query: any) : Promise<TModel | null> {
-        let result = await this.find(query);
+    public async findOne(query: any, sort?: any) : Promise<TModel | null> {
+        let result = await this.find(query, sort);
         return result[0];
     }
 

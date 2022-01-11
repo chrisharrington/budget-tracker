@@ -1,5 +1,4 @@
-import dayjs from 'dayjs';
-import getTimezoneOffset from 'get-timezone-offset';
+import { ExpoPushErrorTicket, ExpoPushSuccessTicket } from 'expo-server-sdk';
 
 export class Id {
     _id: string;
@@ -88,4 +87,27 @@ export class Tag extends Id {
     ignore: boolean;
     defaults: string[];
     updated: Date
+}
+
+export class NotificationTicket extends Id {
+    status: string;
+    notificationId: string;
+    receiptAcquired: boolean;
+
+    static fromTicket(ticket: ExpoPushSuccessTicket | ExpoPushErrorTicket) {
+        const t = new NotificationTicket();
+        // t.status = ticket.status;
+        // if (ticket instanceof ExpoPushSuccessTicket)
+        // t.notificationId = ticket.id;
+        // t.receiptAcquired = false;
+        return t;
+    }
+
+    static fromRaw(raw: any) : NotificationTicket {
+        const ticket = new NotificationTicket();
+        ticket.status = raw.status;
+        ticket.notificationId = raw.id;
+        ticket.receiptAcquired = false;
+        return ticket;
+    }
 }
