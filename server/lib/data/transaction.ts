@@ -19,7 +19,6 @@ class TransactionService extends Base<Transaction> {
     }
 
     async getForWeek(date: Date) : Promise<Transaction[]> {
-        console.log(date);
         const offset = getTimezoneOffset('America/Edmonton'),
             start = dayjs(date).add(offset, 'minute',).toDate(),
             end = dayjs(date).add(offset, 'minute').add(1, 'week').subtract(1, 'second').toDate();

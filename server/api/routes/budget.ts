@@ -4,7 +4,7 @@ import getTimezoneOffset from 'get-timezone-offset';
 
 import Config from '@lib/config';
 import TransactionService from '@lib/data/transaction';
-import { Budget, Transaction } from '@lib/models';
+import { Budget, Tag, Transaction } from '@lib/models';
 
 import timeZonePlugin from 'dayjs-ext/plugin/timeZone';
 
@@ -54,13 +54,18 @@ export default class BudgetRoute {
                 current = current.subtract(1, 'day');
 
             const date = current.toDate(),
-                transactions = await TransactionService.getForWeek(date),
+                currentTransactions = await TransactionService.getForWeek(date),
+                previousTransactions = await TransactionService.getForWeek(dayjs(date).subtract(1, 'week').toDate()),
                 weeklyAmount = Config.weeklyAmount(date);
 
             response.status(200).send(new Budget({
                 date,
                 weeklyAmount,
-                transactions
+                transactions: currentTransactions,
+                lastWeekRemaining: Config.weeklyAmount(current.subtract(1, 'week').toDate()) - previousTransactions
+                    .filter((transaction: Transaction) => !transaction.ignored && (transaction.tags || []).every((tag: Tag) => !tag.ignore))
+                    .map((transaction: Transaction) => transaction.amount)
+                    .reduce((sum: number, current: number) => sum + current, 0)
             }));
         } catch (e) {
             console.log('Request failed: GET /week');
