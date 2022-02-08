@@ -112,3 +112,4 @@ secret.ts
 
 # Database files
 db/*
+db-backup/*

@@ -29,8 +29,6 @@ import Notifications from './notifications';
             }
         });
 
-        Notifications.test('ExponentPushToken[yQlvRcLBdmiwEj1v6Ez-e1]');
-
         console.log('[mail] Listening for messages...');
     } catch (e) {
         console.log('[mail] Error during message handling.');

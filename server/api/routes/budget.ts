@@ -55,17 +55,14 @@ export default class BudgetRoute {
 
             const date = current.toDate(),
                 currentTransactions = await TransactionService.getForWeek(date),
-                previousTransactions = await TransactionService.getForWeek(dayjs(date).subtract(1, 'week').toDate()),
                 weeklyAmount = Config.weeklyAmount(date);
 
+            let balance = await this.getBalanceFromPreviousWeek(current, currentTransactions);
+            
             response.status(200).send(new Budget({
                 date,
-                weeklyAmount,
-                transactions: currentTransactions,
-                lastWeekRemaining: Config.weeklyAmount(current.subtract(1, 'week').toDate()) - previousTransactions
-                    .filter((transaction: Transaction) => !transaction.ignored && (transaction.tags || []).every((tag: Tag) => !tag.ignore))
-                    .map((transaction: Transaction) => transaction.amount)
-                    .reduce((sum: number, current: number) => sum + current, 0)
+                weeklyAmount: weeklyAmount + balance,
+                transactions: currentTransactions
             }));
         } catch (e) {
             console.log('Request failed: GET /week');
@@ -143,5 +140,30 @@ export default class BudgetRoute {
             console.error(e);
             response.status(500).send(e);
         }
+    }
+
+    private static async getBalanceFromPreviousWeek(date: dayjs.Dayjs, transactions: Transaction[]) {
+        let balance = await TransactionService.getBalance(date.toDate());
+
+        if (balance === undefined && dayjs().isAfter(dayjs('2022-01-31'))) {
+            const offset = getTimezoneOffset('America/Edmonton');
+            const transaction = new Transaction();
+            transaction.balance = true;
+            transaction.date = date.add(offset, 'minute').toDate();
+            transaction.description = '(balance from previous week)';
+            
+            const previousTransactions = await TransactionService.getForWeek(date.subtract(1, 'week').toDate());
+            transaction.amount = balance = -1 * (Config.weeklyAmount(date.subtract(1, 'week').toDate()) - previousTransactions
+                .filter((transaction: Transaction) => !transaction.ignored && (transaction.tags || []).every((tag: Tag) => !tag.ignore))
+                .map((transaction: Transaction) => transaction.amount)
+                .reduce((sum: number, current: number) => sum + current, 0));
+            
+            await TransactionService.insertOne(transaction);
+            transactions.push(transaction);
+        } else if (balance === undefined) {
+            balance = 0;
+        }
+        
+        return balance;
     }
 }
