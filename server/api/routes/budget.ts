@@ -145,7 +145,7 @@ export default class BudgetRoute {
     private static async getBalanceFromPreviousWeek(date: dayjs.Dayjs, transactions: Transaction[]) {
         let balance = await TransactionService.getBalance(date.toDate());
 
-        if (balance === undefined && dayjs().isAfter(dayjs('2022-01-31'))) {
+        if (balance === undefined && Config.isBalanceTransactionRequired(date)) {
             const offset = getTimezoneOffset('America/Edmonton');
             const transaction = new Transaction();
             transaction.balance = true;
