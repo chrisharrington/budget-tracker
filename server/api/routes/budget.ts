@@ -140,7 +140,6 @@ export default class BudgetRoute {
 
     private static async getBalanceFromPreviousWeek(date: dayjs.Dayjs) {
         const startOfPreviousWeek = dayjs(date).tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week').toDate();
-        console.log(startOfPreviousWeek);
         const balance = await BalanceService.findOne({ weekOf: startOfPreviousWeek });
         return balance?.amount ?? 0;
     }
