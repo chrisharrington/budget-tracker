@@ -4,7 +4,7 @@ import getTimezoneOffset from 'get-timezone-offset';
 
 import Config from '@lib/config';
 import TransactionService from '@lib/data/transaction';
-import { Budget, Tag, Transaction } from '@lib/models';
+import { Budget, Transaction } from '@lib/models';
 
 import timeZonePlugin from 'dayjs-ext/plugin/timeZone';
 
@@ -49,9 +49,7 @@ export default class BudgetRoute {
             if (!request.query || !request.query.date)
                 throw new Error('Missing date parameter in query string.');
 
-            let current = dayjs(request.query.date as string, 'YYYY-MM-DD')
-                .subtract(getTimezoneOffset('America/Edmonton'), 'minute')
-                .startOf('day');
+            let current = dayjs(request.query.date as string, 'YYYY-MM-DD').startOf('day');
                 
             while (current.day() !== 1)
                 current = current.subtract(1, 'day');
@@ -146,27 +144,29 @@ export default class BudgetRoute {
     }
 
     private static async getBalanceFromPreviousWeek(date: dayjs.Dayjs, transactions: Transaction[]) {
-        let balance = await TransactionService.getBalance(date.toDate());
+        // let balance = await TransactionService.getBalance(date.toDate());
 
-        if (balance === undefined && Config.isBalanceTransactionRequired(date)) {
-            const offset = getTimezoneOffset('America/Edmonton');
-            const transaction = new Transaction();
-            transaction.balance = true;
-            transaction.date = date.add(offset, 'minute').toDate();
-            transaction.description = '(balance from previous week)';
+        // if (balance === undefined && Config.isBalanceTransactionRequired(date)) {
+        //     const offset = getTimezoneOffset('America/Edmonton');
+        //     const transaction = new Transaction();
+        //     transaction.balance = true;
+        //     transaction.date = date.add(offset, 'minute').toDate();
+        //     transaction.description = '(balance from previous week)';
             
-            const previousTransactions = await TransactionService.getForWeek(date.subtract(1, 'week').toDate());
-            transaction.amount = balance = -1 * (Config.weeklyAmount(date.subtract(1, 'week').toDate()) - previousTransactions
-                .filter((transaction: Transaction) => !transaction.ignored && (transaction.tags || []).every((tag: Tag) => !tag.ignore))
-                .map((transaction: Transaction) => transaction.amount)
-                .reduce((sum: number, current: number) => sum + current, 0));
+        //     const previousTransactions = await TransactionService.getForWeek(date.subtract(1, 'week').toDate());
+        //     transaction.amount = balance = -1 * (Config.weeklyAmount(date.subtract(1, 'week').toDate()) - previousTransactions
+        //         .filter((transaction: Transaction) => !transaction.ignored && (transaction.tags || []).every((tag: Tag) => !tag.ignore))
+        //         .map((transaction: Transaction) => transaction.amount)
+        //         .reduce((sum: number, current: number) => sum + current, 0));
             
-            await TransactionService.insertOne(transaction);
-            transactions.push(transaction);
-        } else if (balance === undefined) {
-            balance = 0;
-        }
+        //     await TransactionService.insertOne(transaction);
+        //     transactions.push(transaction);
+        // } else if (balance === undefined) {
+        //     balance = 0;
+        // }
         
-        return balance;
+        // return balance;
+
+        return 0;
     }
 }

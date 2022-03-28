@@ -33,7 +33,6 @@ export class Transaction extends Id {
     owner: string;
     ignored: boolean;
     tags: Tag[];
-    balance: boolean;
 
     constructor() {
         super();
@@ -49,7 +48,6 @@ export class Transaction extends Id {
         transaction.owner = raw.owner;
         transaction.ignored = raw.ignored;
         transaction.tags = raw.tags || [];
-        transaction.balance = raw.balance ?? false;
         return transaction;
     }
 
@@ -69,7 +67,6 @@ export class Transaction extends Id {
         transaction.description = words.slice(words.indexOf('at')+1, words.lastIndexOf('on')).join(' ');
         transaction.owner = parsed.indexOf('0931') > -1 ? 'Sarah' : 'Chris';
         transaction.ignored = false;
-        transaction.balance = false;
         return transaction;
     }
     
@@ -81,7 +78,6 @@ export class Transaction extends Id {
         copy.owner = t.owner;
         copy.ignored = t.ignored;
         copy.tags = [...t.tags];
-        copy.balance = t.balance;
         return copy;
     }
 }
@@ -98,15 +94,6 @@ export class NotificationTicket extends Id {
     notificationId: string;
     receiptAcquired: boolean;
 
-    static fromTicket(ticket: ExpoPushSuccessTicket | ExpoPushErrorTicket) {
-        const t = new NotificationTicket();
-        // t.status = ticket.status;
-        // if (ticket instanceof ExpoPushSuccessTicket)
-        // t.notificationId = ticket.id;
-        // t.receiptAcquired = false;
-        return t;
-    }
-
     static fromRaw(raw: any) : NotificationTicket {
         const ticket = new NotificationTicket();
         ticket.status = raw.status;
@@ -114,4 +101,9 @@ export class NotificationTicket extends Id {
         ticket.receiptAcquired = false;
         return ticket;
     }
+}
+
+export class Balance extends Id {
+    weekOf: Date;
+    amount: number;
 }

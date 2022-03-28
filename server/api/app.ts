@@ -10,6 +10,8 @@ import Budget from '@api/routes/budget';
 import Device from '@api/routes/device';
 import Tags from '@api/routes/tags';
 
+import Balances from '@lib/balances';
+
 
 class Server {
     private port: number;
@@ -18,7 +20,7 @@ class Server {
         this.port = port;
     }
 
-    run() {
+    async run() {
         const app = express();
         app.use(cors());
         app.use(bodyParser.json());
@@ -27,6 +29,8 @@ class Server {
         Budget.initialize(app);
         Device.initialize(app);
         Tags.initialize(app);
+
+        await Balances.startWeeklyJob();
 
         app.listen(this.port, () => console.log(`Listening on port ${this.port}...`));
     }
