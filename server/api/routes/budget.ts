@@ -6,6 +6,7 @@ import Config from '@lib/config';
 import TransactionService from '@lib/data/transaction';
 import BalanceService from '@lib/data/balance';
 import { Budget, Transaction } from '@lib/models';
+import Balances from '@lib/balances';
 
 import timeZonePlugin from 'dayjs-ext/plugin/timeZone';
 
@@ -85,17 +86,18 @@ export default class BudgetRoute {
         try {
             console.log('Request received: POST /transaction');
 
-            const startOfPreviousWeek = dayjs().tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week').toDate();
             const transaction = Transaction.fromRaw(request.body);
 
-            if (dayjs(transaction.date).isBefore(startOfPreviousWeek))
-            {
+            var valid = await this.checkTransaction(transaction);
+            if (!valid) {
                 console.error('Cannot update transactions from further back than the previous week.');
                 response.sendStatus(400);
                 return;
             }
 
             await TransactionService.updateOne(Transaction.fromRaw(request.body));
+
+            await this.updateBalance(transaction);
 
             response.sendStatus(200);
         } catch (e) {
@@ -109,11 +111,10 @@ export default class BudgetRoute {
         try {
             console.log('Request received: POST /transaction/split');
 
-            const startOfPreviousWeek = dayjs().tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week').toDate();
             const transaction = Transaction.fromRaw(request.body);
 
-            if (dayjs(transaction.date).isBefore(startOfPreviousWeek))
-            {
+            var valid = await this.checkTransaction(transaction);
+            if (!valid) {
                 console.error('Cannot update transactions from further back than the previous week.');
                 response.sendStatus(400);
                 return;
@@ -130,6 +131,8 @@ export default class BudgetRoute {
                 TransactionService.insertOne(copy)
             ]);
 
+            await this.updateBalance(transaction);
+
             response.sendStatus(200);
         } catch (e) {
             console.log('Request failed: POST /transaction/split');
@@ -142,5 +145,20 @@ export default class BudgetRoute {
         const startOfPreviousWeek = dayjs(date).tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week').toDate();
         const balance = await BalanceService.findOne({ weekOf: startOfPreviousWeek });
         return balance?.amount ?? 0;
+    }
+
+    private static async checkTransaction(transaction: Transaction) : Promise<boolean> {
+        const startOfPreviousWeek = dayjs().tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week');
+        const date = dayjs(transaction.date);
+
+        return !date.isBefore(startOfPreviousWeek);
+    }
+
+    private static async updateBalance(transaction: Transaction) {
+        const startOfPreviousWeek = dayjs().tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week');
+        const startOfThisWeek = startOfPreviousWeek.add(1, 'week');
+        const date = dayjs(transaction.date);
+        if (date.isAfter(startOfPreviousWeek) && date.isBefore(startOfThisWeek))
+            await Balances.upsertBalanceFromPreviousWeek(true);
     }
 }

@@ -27,12 +27,12 @@ class Balances {
         console.log(`Started weekly job to update balance. Next run on ${job.nextDates().toDate()}`);
     }
 
-    async upsertBalanceFromPreviousWeek() {
+    async upsertBalanceFromPreviousWeek(force: boolean = false) {
         console.log('Updating balance for previous week.');
 
         const startOfPreviousWeek = dayjs().tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week').toDate();
         let balance = await BalanceService.findOne({ weekOf: startOfPreviousWeek });
-        if (balance) {
+        if (balance && !force) {
             console.log('Balance found. Skipping.');
             return;
         }
@@ -44,10 +44,14 @@ class Balances {
             .reduce((sum: number, curr: number) => sum + curr, 0);
         const weeklyAmount = Config.weeklyAmount(startOfPreviousWeek); 
 
-        balance = new Balance();
+        if (!balance) {
+            balance = new Balance();
+            balance.weekOf = startOfPreviousWeek;
+            balance = await BalanceService.insertOne(balance);
+        }
+
         balance.amount = weeklyAmount - sum;
-        balance.weekOf = startOfPreviousWeek;
-        await BalanceService.insertOne(balance);
+        await BalanceService.updateOne(balance);
 
         console.log(`Inserted balance with amount ${balance.amount.toFixed(2)}.`)
     }
