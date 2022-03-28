@@ -2,6 +2,8 @@ import dayjs from 'dayjs';
 
 export default class Config {
     static databaseConnectionString: string = 'mongodb://database:27017';
+    static timezone: string = 'America/Edmonton';
+    static balanceUpdateCron: string = '0 0 * * MON';
 
     static weeklyAmount = (date: Date) => {
         if (date >= new Date(2021, 11, 5))

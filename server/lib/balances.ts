@@ -13,16 +13,14 @@ import Config from './config';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const CRON_SCHEDULE = '0 0 * * MON'; // Every Monday at midnight.
-const TIMEZONE = 'America/Edmonton';
 
 class Balances {
     async startWeeklyJob() {
         await this.upsertBalanceFromPreviousWeek();
 
-        const job = new CronJob(CRON_SCHEDULE, async () => {
+        const job = new CronJob(Config.balanceUpdateCron, async () => {
             await this.upsertBalanceFromPreviousWeek();
-        }, null, true, TIMEZONE);
+        }, null, true, Config.timezone);
 
         job.start();
 
@@ -32,7 +30,7 @@ class Balances {
     async upsertBalanceFromPreviousWeek() {
         console.log('Updating balance for previous week.');
 
-        const startOfPreviousWeek = dayjs().tz(TIMEZONE).startOf('week').add(1, 'day').subtract(1, 'week').toDate();
+        const startOfPreviousWeek = dayjs().tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week').toDate();
         let balance = await BalanceService.findOne({ weekOf: startOfPreviousWeek });
         if (balance) {
             console.log('Balance found. Skipping.');

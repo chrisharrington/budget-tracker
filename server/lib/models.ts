@@ -18,7 +18,7 @@ export class Device extends Id {
 export class Budget {
     date: Date;
     weeklyAmount: number;
-    lastWeekRemaining: number;
+    balance: number;
     transactions: Transaction[];
     
     constructor(initializer: Partial<Budget>) {
