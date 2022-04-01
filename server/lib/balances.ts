@@ -38,11 +38,15 @@ class Balances {
         }
             
         const transactions = await TransactionService.getForWeek(startOfPreviousWeek);
-        const sum = transactions
+
+        let sum = transactions
             .filter((transaction: Transaction) => !transaction.ignored && transaction.tags.every((tag: Tag) => !tag.ignore))
             .map((transaction: Transaction) => transaction.amount)
             .reduce((sum: number, curr: number) => sum + curr, 0);
-        const weeklyAmount = Config.weeklyAmount(startOfPreviousWeek); 
+
+        const lastWeeksBalance = await BalanceService.findOne({ weekOf: dayjs(startOfPreviousWeek).subtract(1, 'week').toDate() });
+        if (lastWeeksBalance)
+            sum -= lastWeeksBalance.amount;
 
         if (!balance) {
             balance = new Balance();
@@ -50,7 +54,7 @@ class Balances {
             balance = await BalanceService.insertOne(balance);
         }
 
-        balance.amount = weeklyAmount - sum;
+        balance.amount = Config.weeklyAmount(startOfPreviousWeek) - sum;
         await BalanceService.updateOne(balance);
 
         console.log(`Inserted balance with amount ${balance.amount.toFixed(2)}.`)

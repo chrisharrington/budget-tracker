@@ -24,7 +24,7 @@ class Server {
         const app = express();
         app.use(cors());
         app.use(bodyParser.json());
-        // app.use(this.auth);
+        app.use(this.auth);
 
         Budget.initialize(app);
         Device.initialize(app);
