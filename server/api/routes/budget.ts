@@ -111,7 +111,7 @@ export default class BudgetRoute {
         try {
             console.log('Request received: POST /transaction/split');
 
-            const transaction = Transaction.fromRaw(request.body);
+            const transaction = Transaction.fromRaw(request.body.transaction);
 
             var valid = await this.checkTransaction(transaction);
             if (!valid) {
