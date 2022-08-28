@@ -13,10 +13,12 @@ export default class Inbox {
     private ready: Promise<void>;
     private emailAddress: string;
     private password: string;
+    private searching: boolean;
 
     constructor(emailAddress: string, password: string) {
         this.emailAddress = emailAddress;
         this.password = password;
+        this.searching = false;
 
         this.connect();
         
@@ -34,11 +36,11 @@ export default class Inbox {
         }
 
         console.log('[mail] Connecting...');
-        this.ready = new Promise((resolve, reject) => {
+        this.ready = new Promise<void>((resolve, reject) => {
             this.imap = new Imap({
                 user: this.emailAddress,
                 password: this.password,
-                host: 'imap.gmail.com',
+                host: 'outlook.office365.com',
                 port: 993,
                 tls: true,
                 tlsOptions: { rejectUnauthorized: false }
@@ -50,7 +52,6 @@ export default class Inbox {
                     await this.connect();
                 } else {
                     console.log('[mail] IMAP reported error.');
-                    console.error(error);
                     reject(error);
                 }
             });
@@ -67,9 +68,19 @@ export default class Inbox {
 
             this.imap.on('mail', async () => {
                 console.log('[mail] Mail event triggered.');
-                await this.unread();
+
+                if (this.searching)
+                    console.log('[mail] Search already in progress. No additional search performed.');
+                else {
+                    this.searching = true;
+                    console.log('[mail] Search block enabled.');
+                    await this.unread();
+
+                    this.searching = false;
+                    console.log('[mail] Search block disabled.');
+                }
             });
-        });
+        }).catch(console.error);
 
         this.imap.connect();
     }
@@ -77,45 +88,55 @@ export default class Inbox {
     private async unread() : Promise<void> {
         await this.ready;
 
-        console.log('[mail] Searching for unread messages.');
-        this.imap.search(['UNSEEN'], async (error: Error, messageIds) => {
-            if (error) {
-                console.error(error);
-                throw error;
-            } else {
-                if (!messageIds.length) {
-                    console.log('[mail] No unread messages found.');
-                    return;
-                }
+        return new Promise<void>((resolve, reject) => {
+            console.log('[mail] Searching for unread messages.');
+            this.imap.search(['UNSEEN'], async (error: Error, messageIds) => {
+                if (error) {
+                    console.error(error);
+                    reject(error);
+                } else {
+                    if (!messageIds.length) {
+                        console.log('[mail] No unread messages found.');
+                        resolve();
+                    }
 
-                const fetch = this.imap.fetch(messageIds, { bodies: '' });
-                fetch.on('message', message => {
-                    const parser = new MailParser();
-    
-                    parser.once('end', mail => {
-                        if (this.onMessageCallback && mail.subject === 'A new Credit Card transaction has been made') {
-                            console.log('[mail] Transaction email received.');
-                            this.onMessageCallback(mail.html, dayjs(mail.receivedDate).toDate());
+                    console.log(`[mail] Found ${messageIds.length} unread message${messageIds.length === 1 ? '' : 's'}.`);
+
+                    if (!messageIds.length) {
+                        resolve();
+                        return;
+                    }
+
+                    const fetch = this.imap.fetch(messageIds, { bodies: '' });
+                    fetch.on('message', message => {
+                        const parser = new MailParser(); 
+        
+                        parser.once('end', mail => {
+                            if (this.onMessageCallback && mail.subject.indexOf('A new Credit Card transaction has been made') > -1) {
+                                console.log('[mail] Transaction email received.');
+                                this.onMessageCallback(mail.html, dayjs(mail.receivedDate).toDate());
+                                resolve();
+                            }
+                        });
+        
+                        message.on('body', (stream: Stream) => {
+                            stream.pipe(parser);
+                        });
+        
+                        message.once('end', () => {
+                            parser.end();
+                        });
+                    });
+                        
+                    this.imap.setFlags(messageIds, ['\\Seen'], (error: Error) => {
+                        console.log('[mail] Marking unread messages as read.');
+                        if (error) {
+                            console.error(error);
+                            reject(error);
                         }
                     });
-    
-                    message.on('body', (stream: Stream) => {
-                        stream.pipe(parser);
-                    });
-    
-                    message.once('end', () => {
-                        parser.end();
-                    });
-                });
-                    
-                this.imap.setFlags(messageIds, ['\\Seen'], (error: Error) => {
-                    console.log('[mail] Marking unread messages as read.');
-                    if (error) {
-                        console.error(error);
-                        throw error;
-                    }
-                });
-            }
+                }
+            });
         });
     }
 }
