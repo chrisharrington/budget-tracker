@@ -14,4 +14,4 @@ export default class Config {
     }
 
     static isBalanceTransactionRequired = (date: dayjs.Dayjs) => dayjs('2022-01-31').isBefore(date);
-}
+} 

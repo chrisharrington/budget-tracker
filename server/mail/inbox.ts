@@ -32,6 +32,7 @@ export default class Inbox {
     private async connect(disconnect: boolean = false) {
         if (disconnect) {
             console.log('[mail] Disconnected.');
+            this.block(false);
             this.imap.end();
         }
 
@@ -72,17 +73,19 @@ export default class Inbox {
                 if (this.searching)
                     console.log('[mail] Search already in progress. No additional search performed.');
                 else {
-                    this.searching = true;
-                    console.log('[mail] Search block enabled.');
+                    this.block(true);
                     await this.unread();
-
-                    this.searching = false;
-                    console.log('[mail] Search block disabled.');
+                    this.block(false);
                 }
             });
         }).catch(console.error);
 
         this.imap.connect();
+    }
+
+    private block(flag: boolean) {
+        console.log(`[mail] Search block ${flag ? 'enabled' : 'disabled'}.`);
+        this.searching = flag;
     }
 
     private async unread() : Promise<void> {

@@ -31,20 +31,28 @@ class Balances {
         console.log('Updating balance for previous week.');
 
         const startOfPreviousWeek = dayjs().tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week').toDate();
+        console.log('Previous week start date is ' + startOfPreviousWeek);
         let balance = await BalanceService.findOne({ weekOf: startOfPreviousWeek });
         if (balance && !force) {
             console.log('Balance found. Skipping.');
             return;
         }
             
-        const transactions = await TransactionService.getForWeek(startOfPreviousWeek);
+        const transactions = await TransactionService.getForWeek(startOfPreviousWeek),
+            isUpdate = !!balance;
 
         let sum = transactions
             .filter((transaction: Transaction) => !transaction.ignored && transaction.tags.every((tag: Tag) => !tag.ignore))
             .map((transaction: Transaction) => transaction.amount)
             .reduce((sum: number, curr: number) => sum + curr, 0);
 
-        const lastWeeksBalance = await BalanceService.findOne({ weekOf: dayjs(startOfPreviousWeek).subtract(1, 'week').toDate() });
+        const lastWeeksBalance = await BalanceService.findOne({
+            weekOf: {
+                $gt: dayjs(startOfPreviousWeek).subtract(1, 'week').subtract(1, 'day').toDate(),
+                $lt: dayjs(startOfPreviousWeek).subtract(1, 'week').add(1, 'day').toDate()
+            }
+        });
+
         if (lastWeeksBalance)
             sum -= lastWeeksBalance.amount;
 
@@ -57,7 +65,7 @@ class Balances {
         balance.amount = Config.weeklyAmount(startOfPreviousWeek) - sum;
         await BalanceService.updateOne(balance);
 
-        console.log(`Inserted balance with amount ${balance.amount.toFixed(2)}.`)
+        console.log(`${isUpdate ? 'Updated' : 'Inserted'} balance with amount ${balance.amount.toFixed(2)}.`)
     }
 }
 
