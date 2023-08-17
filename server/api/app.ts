@@ -32,7 +32,8 @@ class Server {
         Tags.initialize(app);
         OneTime.initialize(app);
 
-        await Balances.startWeeklyJob();
+        await Balances.startWeeklyRemainingBalanceJob();
+        await Balances.startMonthlyOneTimeBalanceIncreaseJob();
 
         app.listen(this.port, () => console.log(`Listening on port ${this.port}...`));
     }

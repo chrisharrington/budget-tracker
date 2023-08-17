@@ -7,6 +7,7 @@ import { Balance, Tag, Transaction } from '@lib/models';
 
 import TransactionService from '@lib/data/transaction';
 import BalanceService from '@lib/data/balance';
+import OneTimeService from '@lib/data/one-time';
 
 import Config from './config';
 
@@ -15,20 +16,32 @@ dayjs.extend(timezone);
 
 
 class Balances {
-    async startWeeklyJob() {
+    async startMonthlyOneTimeBalanceIncreaseJob() {
+        const job = new CronJob(Config.oneTimeBalanceUpdateCron, async () => {
+            const oneTime = await OneTimeService.get();
+            oneTime.balance += Config.oneTimeBalanceIncrease;
+            await OneTimeService.updateOne(oneTime);
+        }, null, true, Config.timezone);
+
+        job.start();
+
+        console.log(`Started monthly job to update one-time balance. Next run on ${job.nextDates().toDate()}`);
+    }
+
+    async startWeeklyRemainingBalanceJob() {
         await this.upsertBalanceFromPreviousWeek();
 
-        const job = new CronJob(Config.balanceUpdateCron, async () => {
+        const job = new CronJob(Config.remainingBalanceUpdateCron, async () => {
             await this.upsertBalanceFromPreviousWeek();
         }, null, true, Config.timezone);
 
         job.start();
 
-        console.log(`Started weekly job to update balance. Next run on ${job.nextDates().toDate()}`);
+        console.log(`Started weekly job to update remaining balance. Next run on ${job.nextDates().toDate()}`);
     }
 
     async upsertBalanceFromPreviousWeek(force: boolean = false) {
-        console.log('Updating balance for previous week.');
+        console.log('Updating remaining balance for previous week.');
 
         const startOfPreviousWeek = dayjs().tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week').toDate();
         console.log('Previous week start date is ' + startOfPreviousWeek);
@@ -65,7 +78,7 @@ class Balances {
         balance.amount = Config.weeklyAmount(startOfPreviousWeek) - sum;
         await BalanceService.updateOne(balance);
 
-        console.log(`${isUpdate ? 'Updated' : 'Inserted'} balance with amount ${balance.amount.toFixed(2)}.`)
+        console.log(`${isUpdate ? 'Updated' : 'Inserted'} remaining balance with amount ${balance.amount.toFixed(2)}.`)
     }
 }
 
