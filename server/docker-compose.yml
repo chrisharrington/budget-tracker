@@ -15,7 +15,7 @@ services:
                 max-size: '1m'
 
     database:
-        image: 'mongo'
+        image: mongo:6
         container_name: budget-database
         restart: unless-stopped
         volumes:

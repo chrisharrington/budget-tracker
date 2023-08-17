@@ -107,3 +107,7 @@ export class Balance extends Id {
     weekOf: Date;
     amount: number;
 }
+
+export class OneTime extends Id {
+    balance: number;
+}

@@ -6,11 +6,10 @@ import bodyParser from 'body-parser';
 
 import Secret from '@lib/secret';
 
-import TransactionService from '@lib/data/transaction';
-
 import Budget from '@api/routes/budget';
 import Device from '@api/routes/device';
 import Tags from '@api/routes/tags';
+import OneTime from '@api/routes/one-time';
 
 import Balances from '@lib/balances';
 
@@ -23,20 +22,6 @@ class Server {
     }
 
     async run() {
-        // const tags = [];
-        // tags.push('allowance');
-        // tags.push('gas');
-        // tags.push('health');
-        // tags.push('holiday');
-        // tags.push('one-time');
-
-        // const transactions = await TransactionService.find({ 'tags.name': { $in: tags }, date: { $gte: new Date(2022, 0, 1) } });
-        // const amount = transactions
-        //     .map(x => x.amount)
-        //     .reduce((prev, curr) => prev + curr, 0);
-
-        // console.log(amount);
-
         const app = express();
         app.use(cors());
         app.use(bodyParser.json());
@@ -45,6 +30,7 @@ class Server {
         Budget.initialize(app);
         Device.initialize(app);
         Tags.initialize(app);
+        OneTime.initialize(app);
 
         await Balances.startWeeklyJob();
 

@@ -5,6 +5,7 @@ import getTimezoneOffset from 'get-timezone-offset';
 import Config from '@lib/config';
 import TransactionService from '@lib/data/transaction';
 import BalanceService from '@lib/data/balance';
+import OneTimeService from '@lib/data/one-time';
 import { Budget, Transaction } from '@lib/models';
 import Balances from '@lib/balances';
 
@@ -16,6 +17,8 @@ export default class BudgetRoute {
     static initialize(app: Application) {
         app.get('/week', this.getBudgetForWeek.bind(this));
         app.get('/history', this.getHistory.bind(this));
+        app.get('/transaction/sum-monthly', this.getSummedMonthlyAmountForTag.bind(this));
+
         app.post('/transaction', this.updateTransaction.bind(this));
         app.post('/transaction/split', this.splitTransaction.bind(this));
     }
@@ -28,7 +31,6 @@ export default class BudgetRoute {
                 throw new Error('Missing date parameter in query string.');
 
             let current = dayjs(request.query.date as string, 'YYYY-MM-DD').startOf('day');
-                
             while (current.day() !== 1)
                 current = current.subtract(1, 'day');
 
@@ -95,8 +97,8 @@ export default class BudgetRoute {
                 return;
             }
 
+            await OneTimeService.applyTransaction(transaction);
             await TransactionService.updateOne(Transaction.fromRaw(request.body));
-
             await this.updateBalance(transaction);
 
             response.sendStatus(200);
@@ -136,6 +138,47 @@ export default class BudgetRoute {
             response.sendStatus(200);
         } catch (e) {
             console.log('Request failed: POST /transaction/split');
+            console.error(e);
+            response.status(500).send(e);
+        }
+    }
+
+    private static async getSummedMonthlyAmountForTag(request: Request, response: Response) {
+        try {
+            console.log('Request received: GET /transaction/sum-monthly');
+
+            if (!request.query.start)
+                return response.status(400).send('Missing start date.');
+            if (!request.query.end)
+                return response.status(400).send('Missing end date.');
+            if (!request.query.tag)
+                return response.status(400).send('Missing tag.');
+
+            const start = dayjs(request.query.start as string),
+                end = dayjs(request.query.end as string),
+                tag = request.query.tag;
+
+            const transactions = await TransactionService.find({
+                date: {
+                    $gte: start.toDate(),
+                    $lt: end.toDate()
+                },
+                tags: {
+                    $elemMatch: {
+                        name: tag
+                    }
+                }
+            });
+
+            const sum = transactions.reduce((sum: number, curr: Transaction) => sum += curr.amount, 0);
+            response.status(200).contentType('application/json').send(JSON.stringify({
+                sum,
+                transactions: transactions
+                    .sort((first, second) => dayjs(first.date).isBefore(dayjs(second.date)) ? 1 : -1)
+                    .map(t => ({ description: t.description, amount: t.amount, date: dayjs(t.date).format() }))
+            }));
+        } catch (e) {
+            console.log('Request failed: GET /transaction/sum-monthly');
             console.error(e);
             response.status(500).send(e);
         }
