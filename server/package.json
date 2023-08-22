@@ -26,7 +26,7 @@
     "cron": "^1.8.2",
     "dayjs": "^1.8.29",
     "dayjs-ext": "^2.2.0",
-    "expo-server-sdk": "^3.6.0",
+    "expo-server-sdk": "^3.7.0",
     "express": "^4.17.1",
     "get-timezone-offset": "^1.0.4",
     "imap": "^0.8.19",
