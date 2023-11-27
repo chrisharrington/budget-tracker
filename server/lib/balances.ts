@@ -21,6 +21,8 @@ class Balances {
             const oneTime = await OneTimeService.get();
             oneTime.balance += Config.oneTimeBalanceIncrease;
             await OneTimeService.updateOne(oneTime);
+
+            console.log(`Updated one-time balance to ${oneTime.balance}.`);
         }, null, true, Config.timezone);
 
         job.start();
