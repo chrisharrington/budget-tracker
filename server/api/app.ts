@@ -1,19 +1,13 @@
 import 'module-alias/register';
-
 import express, { Request, Response } from 'express';
-import { rateLimit } from 'express-rate-limit';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-
 import Secret from '@lib/secret';
-
 import Budget from '@api/routes/budget';
 import Device from '@api/routes/device';
 import Tags from '@api/routes/tags';
 import OneTime from '@api/routes/one-time';
-
 import Balances from '@lib/balances';
-
 
 class Server {
     private port: number;
@@ -26,7 +20,6 @@ class Server {
         const app = express();
         app.use(cors());
         app.use(bodyParser.json());
-        app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100, standardHeaders: false, legacyHeaders: false }))
         app.use(this.auth);
 
         Budget.initialize(app);
@@ -41,9 +34,10 @@ class Server {
     }
 
     private auth(request: Request, response: Response, next: any) {
-        if (request.headers.authorization !== Secret.apiKey)
+        if (request.headers.authorization !== Secret.apiKey) {
+            console.log('Unauthorized request: ' + request.url);
             response.sendStatus(403);
-        else
+        } else
             next();
     }
 }
