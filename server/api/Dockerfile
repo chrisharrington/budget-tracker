@@ -1,3 +1,3 @@
 FROM node:lts
 WORKDIR /app
-CMD yarn api:dev
+CMD bun api:dev

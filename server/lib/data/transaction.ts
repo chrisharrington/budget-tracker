@@ -30,8 +30,31 @@ class TransactionService extends Base<Transaction> {
             date: {
                 $gte: start,
                 $lte: end
+            },
+            isAllowancePayment: {
+                $exists: false
             }
         }, { date: -1 });
+    }
+
+    async getAllowanceTransactions(owner: string) : Promise<Transaction[]> {
+        return await this.find({
+            $or: [
+                {
+                    tags: {
+                        $elemMatch: {
+                            name: owner
+                        }
+                    }
+                },
+                {
+                    isAllowancePayment: true,
+                    owner
+                }
+            ]
+        }, {
+            date: -1
+        });
     }
 
     async getBalance(date: Date) : Promise<number | undefined> {

@@ -8,6 +8,7 @@ import Device from '@api/routes/device';
 import Tags from '@api/routes/tags';
 import OneTime from '@api/routes/one-time';
 import Balances from '@lib/balances';
+import * as Allowances from '@api/routes/allowances';
 
 class Server {
     private port: number;
@@ -26,6 +27,7 @@ class Server {
         Device.initialize(app);
         Tags.initialize(app);
         OneTime.initialize(app);
+        Allowances.initialize(app);
 
         await Balances.startWeeklyRemainingBalanceJob();
         await Balances.startMonthlyOneTimeBalanceIncreaseJob();
@@ -34,8 +36,8 @@ class Server {
     }
 
     private auth(request: Request, response: Response, next: any) {
-        if (request.headers.authorization !== Secret.apiKey) {
-            console.log('Unauthorized request: ' + request.url);
+        if (request.headers.authorization !== `Bearer ${Secret.apiKey}`) {
+            console.log('Unauthorized request: ' + request.url, request.headers.authorization);
             response.sendStatus(403);
         } else
             next();

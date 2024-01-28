@@ -1,4 +1,4 @@
 FROM node:lts
 WORKDIR /app
-CMD yarn && \
+CMD bun install && \
     ./node_modules/.bin/tsc -w

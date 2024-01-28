@@ -30,9 +30,6 @@ export default class BudgetRoute {
             if (!request.query || !request.query.date)
                 throw new Error('Missing date parameter in query string.');
 
-            console.log(request.query.date);
-            console.log(dayjs.utc(request.query.date as string).tz('America/Edmonton').format());
-
             let current = dayjs.utc(request.query.date as string).tz('America/Edmonton').startOf('day');
             while (current.day() !== 1)
                 current = current.subtract(1, 'day');

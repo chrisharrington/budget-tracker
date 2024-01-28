@@ -27,7 +27,7 @@ class Balances {
 
         job.start();
 
-        console.log(`Started monthly job to update one-time balance. Next run on ${job.nextDates().toDate()}`);
+        console.log(`Started monthly job to update one-time balance. Next run on ${job.nextDates()}`);
     }
 
     async startWeeklyRemainingBalanceJob() {
@@ -39,7 +39,7 @@ class Balances {
 
         job.start();
 
-        console.log(`Started weekly job to update remaining balance. Next run on ${job.nextDates().toDate()}`);
+        console.log(`Started weekly job to update remaining balance. Next run on ${job.nextDates()}`);
     }
 
     async upsertBalanceFromPreviousWeek(force: boolean = false) {
