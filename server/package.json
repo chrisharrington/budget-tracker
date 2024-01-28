@@ -37,6 +37,7 @@
     "uuid": "^8.2.0"
   },
   "devDependencies": {
+    "@types/cron": "^2.4.0",
     "@types/imap": "^0.8.30",
     "cors": "^2.8.5",
     "nodemon": "^2.0.4",

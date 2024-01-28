@@ -33,6 +33,7 @@ export class Transaction extends Id {
     owner: string;
     ignored: boolean;
     tags: Tag[];
+    isAllowancePayment?: boolean;
 
     constructor() {
         super();

@@ -7,7 +7,7 @@ import TransactionService from '@lib/data/transaction';
 import BalanceService from '@lib/data/balance';
 import OneTimeService from '@lib/data/one-time';
 import { Budget, Transaction } from '@lib/models';
-import Balances from '@lib/balances';
+import { upsertBalanceFromPreviousWeek } from '@lib/balances';
 
 import timeZonePlugin from 'dayjs-ext/plugin/timeZone';
 
@@ -202,6 +202,6 @@ export default class BudgetRoute {
         const startOfThisWeek = startOfPreviousWeek.add(1, 'week');
         const date = dayjs(transaction.date);
         if (date.isAfter(startOfPreviousWeek) && date.isBefore(startOfThisWeek))
-            await Balances.upsertBalanceFromPreviousWeek(true);
+            await upsertBalanceFromPreviousWeek(true);
     }
 }

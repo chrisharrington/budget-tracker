@@ -12,6 +12,10 @@ class TagService extends Base<Tag> {
         return await this.find({ id });
     }
 
+    async getByNames(names: string[]) : Promise<Tag[]> {
+        return await this.find({ name: { $in: names } });
+    }
+
     async getRecent(count: number = 10) : Promise<Tag[]> {
         return await this.find({}, { name: 1 }, count);
     }

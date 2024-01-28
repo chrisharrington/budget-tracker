@@ -1,11 +1,9 @@
 import dayjs from 'dayjs';
 import timeZonePlugin from 'dayjs-ext/plugin/timeZone';
 import getTimezoneOffset from 'get-timezone-offset';
-
-import { Base } from './base';
-
 import { Transaction } from '@lib/models';
-
+import TagService from '@lib/data/tags';
+import { Base } from './base';
 
 dayjs.extend(timeZonePlugin);
 
@@ -51,6 +49,24 @@ class TransactionService extends Base<Transaction> {
         }, {
             date: -1
         });
+    }
+
+    async insertAllowancePayment(owner: string, amount: number) : Promise<void> {
+        const tag = await TagService.findOne({ name: owner });
+        if (!tag)
+            throw new Error(`Tag not found for ${owner}.`);
+
+        const transaction = new Transaction();
+        transaction.amount = amount;
+        transaction.date = new Date();
+        transaction.description = `Allowance payment for ${owner}.`;
+        transaction.owner = owner;
+        transaction.ignored = false;
+        transaction.isAllowancePayment = true;
+        transaction.tags = [tag];
+        (transaction as any).test = true;
+
+        await this.insertOne(transaction);
     }
 
     async getBalance(date: Date) : Promise<number | undefined> {
