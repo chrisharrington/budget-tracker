@@ -46,10 +46,6 @@ class TransactionService extends Base<Transaction> {
                             name: owner
                         }
                     }
-                },
-                {
-                    isAllowancePayment: true,
-                    owner
                 }
             ]
         }, {
