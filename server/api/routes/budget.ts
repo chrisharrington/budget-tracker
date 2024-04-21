@@ -98,7 +98,7 @@ export default class BudgetRoute {
             }
 
             await OneTimeService.applyTransaction(transaction);
-            await TransactionService.updateOne(Transaction.fromRaw(request.body));
+            await TransactionService.updateOne(transaction);
             await this.updateBalance(transaction);
 
             response.sendStatus(200);

@@ -66,7 +66,7 @@ export class Transaction extends Id {
         transaction.amount = parseFloat(words[0].replace('$', '').replace(',', ''));
         transaction.date = date;
         transaction.description = words.slice(words.indexOf('at')+1, words.lastIndexOf('on')).join(' ');
-        transaction.owner = parsed.indexOf('0931') > -1 ? 'Sarah' : 'Chris';
+        transaction.owner = parsed.indexOf('1379') > -1 ? 'Chris' : 'Sarah';
         transaction.ignored = false;
         return transaction;
     }

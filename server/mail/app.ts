@@ -1,11 +1,18 @@
 import 'module-alias/register';
 
+import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+
 import Secret from '@lib/secret';
 import { Transaction } from '@lib/models';
 import TransactionService from '@lib/data/transaction';
 
 import Inbox from './inbox';
 import Notifications from './notifications';
+
+dayjs.extend(timezone);
+dayjs.extend(utc);
 
 (async () => {
     try {
@@ -17,6 +24,17 @@ import Notifications from './notifications';
 
                 const transaction = Transaction.fromMessage(message, date);
                 console.log(`[mail] Built transaction: ${JSON.stringify(transaction)}`);
+
+                const existingTransactions = await TransactionService.find({
+                    description: { $regex: new RegExp(`^${transaction.description}`) },
+                    amount: transaction.amount, 
+                    date: {
+                        $gte: dayjs.utc(transaction.date).startOf('day').toDate(),
+                        $lte: dayjs.utc(transaction.date).endOf('day').toDate()
+                    }
+                });
+                if (existingTransactions.length)
+                    transaction.description = `${transaction.description} (${existingTransactions.length + 1})`;
 
                 await Promise.all([
                     Notifications.send(transaction),
