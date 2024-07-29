@@ -9,12 +9,12 @@
   "scripts": {
     "api": "./node_modules/.bin/tsc && node api/app.js",
     "api:dev": "./node_modules/.bin/nodemon --watch './**/*.js' api/app.js",
-    "api:logs": "docker-compose logs -f --tail 100 api",
+    "api:logs": "docker compose logs -f --tail 100 api",
     "mail": "./node_modules/.bin/tsc && node mail/app.js",
     "mail:dev": "./node_modules/.bin/nodemon --watch './**/*.js' mail/app.js",
-    "mail:logs": "docker-compose logs -f --tail 100 mail",
+    "mail:logs": "docker compose logs -f --tail 100 mail",
     "database": "docker exec -it $(docker ps --format '{{.ID}} {{.Names}}' | grep 'budget-database' | cut -d ' ' -f1) mongosh budget",
-    "transpiler:logs": "docker-compose logs -f --tail 100 transpiler"
+    "transpiler:logs": "docker compose logs -f --tail 100 transpiler"
   },
   "_moduleAliases": {
     "@lib": "./lib/",

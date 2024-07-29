@@ -14,6 +14,11 @@ export function startWeeklyAllowanceJob() {
     console.log(`Started weekly job to update allowances. Next run on ${job.nextDates()}`);
 }
 
+export async function addOneTimeAllowancePayment(owner: 'quinn' | 'zoe', amount: number) {
+    console.log(`Adding one-time allowance for ${owner}. Amount: ${amount}.`);
+    await TransactionService.insertAllowancePayment(owner, amount);
+}
+
 async function updateAllowance(owner: 'quinn' | 'zoe') {
 
     const transactions = await TransactionService.getAllowanceTransactions(owner),

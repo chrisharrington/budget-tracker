@@ -9,7 +9,7 @@ import Tags from '@api/routes/tags';
 import OneTime from '@api/routes/one-time';
 import * as Allowances from '@api/routes/allowances';
 import { startWeeklyRemainingBalanceJob, startMonthlyOneTimeBalanceIncreaseJob } from '@lib/balances';
-import { startWeeklyAllowanceJob } from '@lib/allowances';
+import { startWeeklyAllowanceJob, addOneTimeAllowancePayment } from '@lib/allowances';
 
 class Server {
     private port: number;
@@ -33,6 +33,8 @@ class Server {
         startWeeklyRemainingBalanceJob();
         startMonthlyOneTimeBalanceIncreaseJob();
         startWeeklyAllowanceJob();
+
+        // await addOneTimeAllowancePayment('zoe', 200);
 
         app.listen(this.port, () => console.log(`Listening on port ${this.port}...`));
     }
