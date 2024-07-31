@@ -55,7 +55,7 @@ export class Transaction extends Id {
     static fromMessage(raw: string, date: Date) : Transaction {
         let parsed = raw.substring(raw.indexOf('$'));
         const words = parsed
-            .substring(0, parsed.indexOf('<br><br>'))
+            .substring(0, parsed.indexOf('<br'))
             .replace('<sup>', '')
             .replace('</sup>', '')
             .replace('&#174;', '')

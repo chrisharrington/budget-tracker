@@ -16,7 +16,7 @@ dayjs.extend(utc);
 
 (async () => {
     try {
-        const inbox = new Inbox(Secret.mailEmailAddress, Secret.mailPassword);
+        const inbox = new Inbox(Secret.mailHost, Secret.mailEmailAddress, Secret.mailPassword);
 
         inbox.onMessage(async (message: string, date: Date) => {
             try {

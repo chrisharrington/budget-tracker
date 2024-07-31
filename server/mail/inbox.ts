@@ -1,5 +1,4 @@
-import Imap from 'imap';
-import { Stream } from 'stream';
+import Imap from 'node-imap';
 import { MailParser } from 'mailparser-mit';
 import dayjs from 'dayjs';
 
@@ -11,11 +10,13 @@ export default class Inbox {
     private imap: Imap;
     private onMessageCallback: (message: Message, date: Date) => void;
     private ready: Promise<void>;
+    private host: string;
     private emailAddress: string;
     private password: string;
     private searching: boolean;
 
-    constructor(emailAddress: string, password: string) {
+    constructor(host: string, emailAddress: string, password: string) {
+        this.host = host;
         this.emailAddress = emailAddress;
         this.password = password;
         this.searching = false;
@@ -41,7 +42,7 @@ export default class Inbox {
             this.imap = new Imap({
                 user: this.emailAddress,
                 password: this.password,
-                host: 'outlook.office365.com',
+                host: this.host,
                 port: 993,
                 tls: true,
                 tlsOptions: { rejectUnauthorized: false }
@@ -122,7 +123,7 @@ export default class Inbox {
                             }
                         });
         
-                        message.on('body', (stream: Stream) => {
+                        message.on('body', stream => {
                             stream.pipe(parser);
                         });
         
