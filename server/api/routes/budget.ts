@@ -38,6 +38,8 @@ export default class BudgetRoute {
                 transactions = await TransactionService.getForWeek(date),
                 weeklyAmount = Config.weeklyAmount(date);
 
+            console.log('Weekly amount: ' + weeklyAmount);
+
             response.status(200).send(new Budget({
                 date,
                 balance: await this.getBalanceFromPreviousWeek(current),
