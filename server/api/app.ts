@@ -34,6 +34,7 @@ class Server {
         startMonthlyOneTimeBalanceIncreaseJob();
         startWeeklyAllowanceJob();
 
+        // await addOneTimeAllowancePayment('quinn', 20);
         // await addOneTimeAllowancePayment('zoe', 200);
 
         app.listen(this.port, () => console.log(`Listening on port ${this.port}...`));

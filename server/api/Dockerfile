@@ -1,3 +1,3 @@
 FROM node:lts
 WORKDIR /app
-CMD bun api:dev
+CMD npm run api:dev
