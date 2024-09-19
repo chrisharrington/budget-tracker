@@ -16,7 +16,8 @@ export default class Notifications {
         
         const chunks = this.expo.chunkPushNotifications(messages);
         chunks.forEach(async (chunk: ExpoPushMessage[]) => {
-            await this.expo.sendPushNotificationsAsync(chunk);
+            const ticket = await this.expo.sendPushNotificationsAsync(chunk);
+            console.log('[mail] Sent notification:', ticket);
         });
     }
     

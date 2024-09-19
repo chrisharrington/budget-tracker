@@ -32,6 +32,7 @@ export default class Inbox {
 
     private async connect(disconnect: boolean = false) {
         if (disconnect) {
+            this.block(true);
             console.log('[mail] Disconnected.');
             this.block(false);
             this.imap.end();
@@ -59,7 +60,7 @@ export default class Inbox {
             });
 
             this.imap.once('ready', () => {
-                console.log('[mail] Ready.')
+                console.log('[mail] Inbox ready.')
                 this.imap.openBox('INBOX', false, error => {
                     if (error)
                         reject(error);

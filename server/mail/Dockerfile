@@ -1,3 +1,3 @@
 FROM node:lts
 WORKDIR /app
-CMD bun mail:dev
+CMD npm run mail:dev

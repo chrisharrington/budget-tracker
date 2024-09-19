@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "e0166c7a-97d5-4bcd-a400-4d9baa7cdddd"
+      }
+    },
+    "android": {
+      "package": "com.chrisharrington.budgettracker"
+    }
+  }
+}

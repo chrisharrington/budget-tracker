@@ -47,6 +47,8 @@ dayjs.extend(utc);
             }
         });
 
+        Notifications.test('ExponentPushToken[I9JfuHAzhmz1wwQ6k_QEJp]');
+
         console.log('[mail] Listening for messages...');
     } catch (e) {
         console.log('[mail] Error during message handling.');
