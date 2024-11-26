@@ -14,7 +14,7 @@ dayjs.extend(timezone);
 export function startMonthlyOneTimeBalanceIncreaseJob() {
     const job = new CronJob(Config.oneTimeBalanceUpdateCron, async () => {
         const oneTime = await OneTimeService.get();
-        oneTime.balance += Config.oneTimeBalanceIncrease;
+        oneTime.balance += Config.oneTimeAmount();
         await OneTimeService.updateOne(oneTime);
 
         console.log(`Updated one-time balance to ${oneTime.balance}.`);
