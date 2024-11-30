@@ -7,6 +7,7 @@ import Budget from '@api/routes/budget';
 import Device from '@api/routes/device';
 import Tags from '@api/routes/tags';
 import OneTime from '@api/routes/one-time';
+import OneTimeService from '@lib/data/one-time';
 import * as Allowances from '@api/routes/allowances';
 import { startWeeklyRemainingBalanceJob, startMonthlyOneTimeBalanceIncreaseJob } from '@lib/balances';
 import { startWeeklyAllowanceJob, addOneTimeAllowancePayment } from '@lib/allowances';
@@ -34,8 +35,9 @@ class Server {
         startMonthlyOneTimeBalanceIncreaseJob();
         startWeeklyAllowanceJob();
 
-        // await addOneTimeAllowancePayment('quinn', 20);
+        // await addOneTimeAllowancePayment('quinn', 100);
         // await addOneTimeAllowancePayment('zoe', 200);
+        // await OneTimeService.addAmount(2364);
 
         app.listen(this.port, () => console.log(`Listening on port ${this.port}...`));
     }

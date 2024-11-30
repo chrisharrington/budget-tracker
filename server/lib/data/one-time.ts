@@ -25,6 +25,14 @@ class OneTimeService extends Base<OneTime> {
         
         await this.updateOne(oneTime);
     }
+
+    async addAmount(amount: number) : Promise<void> {
+        console.log('Adding one-time amount: ' + amount);
+
+        const oneTime = await this.get();
+        oneTime.balance += amount;
+        await this.updateOne(oneTime);
+    }
 }
 
 export default new OneTimeService();
