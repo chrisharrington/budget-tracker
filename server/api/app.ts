@@ -8,9 +8,9 @@ import Device from '@api/routes/device';
 import Tags from '@api/routes/tags';
 import OneTime from '@api/routes/one-time';
 import OneTimeService from '@lib/data/one-time';
-import * as Allowances from '@api/routes/allowances';
+import TransactionService from '@lib/data/transaction';
 import { startWeeklyRemainingBalanceJob, startMonthlyOneTimeBalanceIncreaseJob } from '@lib/balances';
-import { startWeeklyAllowanceJob, addOneTimeAllowancePayment } from '@lib/allowances';
+import { Transaction } from '@root/lib/models';
 
 class Server {
     private port: number;
@@ -29,15 +29,20 @@ class Server {
         Device.initialize(app);
         Tags.initialize(app);
         OneTime.initialize(app);
-        Allowances.initialize(app);
 
         startWeeklyRemainingBalanceJob();
         startMonthlyOneTimeBalanceIncreaseJob();
-        startWeeklyAllowanceJob();
 
-        // await addOneTimeAllowancePayment('quinn', 100);
-        // await addOneTimeAllowancePayment('zoe', 200);
         // await OneTimeService.addAmount(2364);
+
+        // await TransactionService.insertOne({
+        //     amount: -974.06,
+        //     date: new Date(),
+        //     description: 'Reset',
+        //     owner: 'Chris',
+        //     tags: [],
+        //     ignored: false
+        // } as Transaction);
 
         app.listen(this.port, () => console.log(`Listening on port ${this.port}...`));
     }
