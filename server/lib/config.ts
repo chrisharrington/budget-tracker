@@ -12,7 +12,7 @@ export default class Config {
 
     static weeklyAmount = (date: Date) => {
         if (date >= new Date(2025, 0, 1))
-            return 350;
+            return 400;
         if (date >= new Date(2024, 7, 19))
             return 750;
         if (date >= new Date(2021, 11, 5))

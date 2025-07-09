@@ -1,49 +1,50 @@
 services:
     transpiler:
-        build:
-            context: .
-            dockerfile: ./transpiler/Dockerfile
-        container_name: budget-transpiler
+        image: budget-tracker-transpiler:latest
+        container_name: transpiler
         restart: unless-stopped
         volumes:
-            - ./:/app
+            - /home/chrisharrington/code/budget-tracker/server:/app
         logging:
             options:
                 max-file: '3'
                 max-size: '1m'
+        labels:
+            - com.centurylinklabs.watchtower.enable=false
+
 
     database:
         image: mongo:6
-        container_name: budget-database
+        container_name: database
         restart: unless-stopped
         volumes:
-            - ./db:/data/db
+            - /home/chrisharrington/code/budget-tracker/server/db:/data/db
         ports:
             - 27019:27017
 
     api:
-        build:
-            context: .
-            dockerfile: ./api/Dockerfile
-        container_name: budget-api
+        image: budget-tracker-api:latest
+        container_name: api
         restart: unless-stopped
         ports:
             - 9999:9999
         volumes:
-            - ./:/app
+            - /home/chrisharrington/code/budget-tracker/server:/app
         depends_on:
             - database
             - transpiler
+        labels:
+            - com.centurylinklabs.watchtower.enable=false
 
     mail:
-        build:
-            context: .
-            dockerfile: ./mail/Dockerfile
-        container_name: budget-mail
+        image: budget-tracker-mail:latest
+        container_name: mail
         restart: unless-stopped
         volumes:
-            - ./:/app
+            - /home/chrisharrington/code/budget-tracker/server:/app
         depends_on:
             - database
             - transpiler
+        labels:
+            - com.centurylinklabs.watchtower.enable=false
     
