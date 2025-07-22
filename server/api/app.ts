@@ -11,6 +11,7 @@ import OneTimeService from '@lib/data/one-time';
 import TransactionService from '@lib/data/transaction';
 import { startWeeklyRemainingBalanceJob, startMonthlyOneTimeBalanceIncreaseJob } from '@lib/balances';
 import { Transaction } from '@root/lib/models';
+import Log from './routes/log';
 
 class Server {
     private port: number;
@@ -28,6 +29,7 @@ class Server {
         Device.initialize(app);
         Tags.initialize(app);
         OneTime.initialize(app);
+        Log.initialize(app);
 
         startWeeklyRemainingBalanceJob();
         startMonthlyOneTimeBalanceIncreaseJob();
