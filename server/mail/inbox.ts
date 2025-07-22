@@ -85,6 +85,13 @@ export default class Inbox {
         this.imap.connect();
     }
 
+    public async parseUnread(): Promise<void> {
+        this.block(true);
+        console.log('[mail] Parsing unread messages...');
+        await this.unread();
+        this.block(false);
+    }
+
     private block(flag: boolean) {
         console.log(`[mail] Search block ${flag ? 'enabled' : 'disabled'}.`);
         this.searching = flag;

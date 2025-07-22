@@ -1,3 +1,3 @@
-FROM node:lts
+FROM oven/bun:latest
 WORKDIR /app
-CMD npm run api:dev
+CMD ["bun", "run", "api:run"]

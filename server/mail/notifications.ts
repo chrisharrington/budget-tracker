@@ -31,7 +31,7 @@ export default class Notifications {
     }
     
     static async test2(token?: string) : Promise<void> {
-        console.log('[mail] Sending test notification.');
+        console.log('[mail] Sending test notification (2).');
 
         const tokens = [];
         if (token)

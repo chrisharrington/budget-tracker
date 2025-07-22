@@ -28,9 +28,6 @@ class TransactionService extends Base<Transaction> {
             date: {
                 $gte: start,
                 $lte: end
-            },
-            isAllowancePayment: {
-                $exists: false
             }
         }, { date: -1 });
     }

@@ -23,7 +23,6 @@ class Server {
         const app = express();
         app.use(cors());
         app.use(bodyParser.json());
-        app.use(this.auth);
 
         Budget.initialize(app);
         Device.initialize(app);
@@ -45,14 +44,6 @@ class Server {
         // } as Transaction);
 
         app.listen(this.port, () => console.log(`Listening on port ${this.port}...`));
-    }
-
-    private auth(request: Request, response: Response, next: any) {
-        if (request.headers.authorization !== `Bearer ${Secret.apiKey}`) {
-            console.log('Unauthorized request: ' + request.url, request.headers.authorization);
-            response.sendStatus(403);
-        } else
-            next();
     }
 }
 

@@ -86,8 +86,6 @@ export class Transaction extends Id {
 export class Tag extends Id {
     name: string;
     ignore: boolean;
-    defaults: string[];
-    updated: Date
 }
 
 export class NotificationTicket extends Id {
