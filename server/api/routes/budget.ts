@@ -199,7 +199,7 @@ export default class BudgetRoute {
         return !date.isBefore(startOfPreviousWeek);
     }
 
-    private static async updateBalance(transaction: Transaction) {
+    public static async updateBalance(transaction: Transaction) {
         const startOfPreviousWeek = dayjs().tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week');
         const startOfThisWeek = startOfPreviousWeek.add(1, 'week');
         const date = dayjs(transaction.date);

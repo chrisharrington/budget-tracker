@@ -45,7 +45,7 @@ class Server {
         //     ignored: false
         // } as Transaction);
 
-        app.listen(this.port, () => console.log(`Listening on port ${this.port}...`));
+        app.listen(this.port, '0.0.0.0', () => console.log(`Listening on port ${this.port}...`));
     }
 }
 
