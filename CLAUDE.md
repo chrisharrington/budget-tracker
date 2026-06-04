@@ -155,7 +155,7 @@ If a ticket spans both subprojects, create two separate tickets — one per proj
 
 ## Git workflow
 
-- **Main branch**: `master`
+- **Main branch**: `main`
 - **Branch naming**: `(feature|bug)/<short-description>` — e.g., `feature/imap-reconnect`, `bug/duplicate-transaction`. Keep descriptions lowercase, hyphenated. When tied to a ticket, the convention is `feature/<KEY-XXX>` or `bug/<KEY-XXX>` (e.g. `feature/BTAPI-12`, `bug/BTAPP-7`).
 - **Commit messages**: short and direct. Include the ticket reference (`BTAPI-XXX` or `BTAPP-XXX`) when the work is tied to a ticket (e.g., `BTAPI-12: Retry IMAP connection after timeout`, `BTAPP-7: Fix splitting math for ignored transactions`).
 - **PR title**: short and descriptive. Prefix with `[BTAPI-XXX]` or `[BTAPP-XXX]` when there's a ticket.
