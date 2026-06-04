@@ -1,0 +1,55 @@
+{
+  "name": "budget-tracker",
+  "version": "1.0.0",
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "bunx expo start --dev-client",
+    "build:dev": "bunx dotenv -- eas build --profile development --platform android --local --output dev-build.apk",
+    "build:dev:remote": "bunx dotenv -- bunx eas build --profile development --platform android",
+    "build:prod": "bunx dotenv -- eas build --profile production --platform android --local --output prod-build.apk",
+    "build:prod:remote": "bunx dotenv -- bunx eas build --profile production --platform android",
+    "log": "bunx react-native log-android"
+  },
+  "dependencies": {
+    "@react-native-masked-view/masked-view": "0.3.2",
+    "@react-navigation/bottom-tabs": "^6.5.20",
+    "@react-navigation/native": "^6.1.17",
+    "babel-plugin-module-resolver": "^5.0.0",
+    "dayjs": "^1.11.9",
+    "expo": "^53.0.20",
+    "expo-build-properties": "~0.14.8",
+    "expo-constants": "~17.1.7",
+    "expo-dev-client": "~5.2.4",
+    "expo-device": "~7.1.4",
+    "expo-notifications": "~0.31.4",
+    "expo-splash-screen": "~0.30.10",
+    "expo-status-bar": "~2.2.3",
+    "expo-updates": "~0.28.17",
+    "metro": "0.82.0",
+    "metro-config": "0.82.0",
+    "metro-resolver": "0.82.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-native": "0.79.5",
+    "react-native-circular-progress": "^1.3.9",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-modal": "^13.0.1",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.11.1",
+    "react-native-svg": "15.11.2",
+    "typescript": "^5.1.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@types/react": "~19.0.10",
+    "react-native-dotenv": "^3.4.9"
+  },
+  "private": true,
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "listUnknownPackages": false
+      }
+    }
+  }
+}

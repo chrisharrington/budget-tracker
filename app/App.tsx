@@ -1,0 +1,66 @@
+import 'expo-dev-client';
+import 'react-native-gesture-handler';
+
+import React, { useRef } from 'react';
+import { StyleSheet, View, LogBox } from 'react-native';
+import Constants from 'expo-constants';
+import { NavigationContainer } from '@react-navigation/native';
+import Colours from './lib/colours';
+import { Toast, ToastHandle } from './lib/components/toast';
+import { TransactionsScreen } from '@lib/screens/transactions';
+import { StateContext } from '@lib/context';
+import { StatusBar } from 'expo-status-bar';
+import { useNotifications } from '@lib/hooks/notifications';
+import { useFonts } from '@lib/hooks/fonts';
+
+LogBox.ignoreLogs(['new NativeEventEmitter()']);
+
+export default function App() {
+    const toast = useRef<ToastHandle>(null);
+
+    useNotifications();
+    useFonts();
+
+    return <View style={styles.container}>
+        <StatusBar backgroundColor='#2a2a2a' style='light' />
+        <Toast ref={toast} />
+
+        <StateContext.Provider value={{ toast }}>
+            <NavigationContainer>
+                <TransactionsScreen />
+            </NavigationContainer>
+        </StateContext.Provider>
+    </View>;
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: Colours.background.default,
+        flexDirection: 'column',
+        paddingTop: Constants.statusBarHeight
+    },
+
+    tabBar: {
+        flexDirection: 'row',
+        gap: 10,
+        paddingHorizontal: 10,
+        backgroundColor: Colours.background.dark,
+        borderTopWidth: 0,
+    },
+
+    tabBarLabelWrapper: {
+        flex: 1,
+        paddingVertical: 12
+    },
+
+    tabBarLabel: {
+        color: Colours.text.default,
+        padding: 10,
+        fontSize: 12,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        borderRadius: 4,
+        textAlign: 'center'
+    }
+});
