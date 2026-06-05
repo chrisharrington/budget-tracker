@@ -1,7 +1,11 @@
 import dayjs from 'dayjs';
 
 export default class Config {
-    static databaseConnectionString: string = 'mongodb://database:27017';
+    static databaseConnectionString: string = process.env.MONGO_URI ?? 'mongodb://database:27017';
+    static mailHost: string = process.env.MAIL_HOST ?? '';
+    static mailEmailAddress: string = process.env.MAIL_USER ?? '';
+    static mailPassword: string = process.env.MAIL_PASSWORD ?? '';
+    static expoAccessToken: string | undefined = process.env.EXPO_ACCESS_TOKEN;
     static timezone: string = 'America/Edmonton';
     static remainingBalanceUpdateCron: string = '0 0 * * MON';
     static oneTimeBalanceUpdateCron: string = '0 0 1 * *';

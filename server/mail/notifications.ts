@@ -1,11 +1,12 @@
 import { Expo, ExpoPushMessage } from 'expo-server-sdk';
 
+import Config from '../lib/config';
 import DeviceService from '../lib/data/device';
 import TransactionService from '../lib/data/transaction';
 import { Transaction, Device } from '../lib/models';
 
 export default class Notifications {
-    private static expo = new Expo();
+    private static expo = new Expo({ accessToken: Config.expoAccessToken });
 
     static async send(transaction: Transaction, device?: Device) : Promise<void> {
         const devices = device ? [device] : await DeviceService.find({});

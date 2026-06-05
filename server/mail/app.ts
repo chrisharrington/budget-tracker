@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 
-import Secret from '@lib/secret';
+import Config from '@lib/config';
 import { Transaction } from '@lib/models';
 import TransactionService from '@lib/data/transaction';
 
@@ -16,7 +16,10 @@ dayjs.extend(utc);
 
 (async () => {
     try {
-        const inbox = new Inbox(Secret.mailHost, Secret.mailEmailAddress, Secret.mailPassword);
+        if (!Config.mailHost || !Config.mailEmailAddress || !Config.mailPassword)
+            console.warn('[mail] Missing IMAP credentials - set MAIL_HOST, MAIL_USER, and MAIL_PASSWORD. The listener will not be able to connect.');
+
+        const inbox = new Inbox(Config.mailHost, Config.mailEmailAddress, Config.mailPassword);
 
         inbox.onMessage(async (message: string, date: Date) => {
             try {
