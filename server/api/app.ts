@@ -2,7 +2,6 @@ import 'module-alias/register';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import Secret from '@lib/secret';
 import Budget from '@api/routes/budget';
 import Device from '@api/routes/device';
 import Tags from '@api/routes/tags';

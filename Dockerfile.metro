@@ -1,0 +1,70 @@
+# Metro bundler — long-running Expo dev server for the React Native app.
+# Image carries app/node_modules baked in so the anonymous volume mounted at
+# /app/app/node_modules in compose preserves the install under the .:/app bind
+# mount — same overlay trick the api/mail services use.
+#
+# Deliberately minimal: no Android toolchain, no gh/uv/git — metro only needs
+# bun + the app's deps. Heavier dev tooling lives in Dockerfile.dev.
+FROM oven/bun:latest
+
+# Watchman — Meta's file-watching daemon. Metro's file-map layer auto-detects
+# the `watchman` binary on PATH at startup and switches from its built-in
+# fs.watch fallback to WatchmanWatcher, which (a) watches at the directory
+# level so atomic write-then-rename saves from external editors aren't
+# missed, and (b) recrawls on inotify queue overflow. Without it, edits made
+# from the dev container often fail to reach the metro bundler. No upstream
+# Debian package; install the prebuilt Linux binary from GitHub Releases.
+# The release cadence drops the Linux ZIP intermittently — bump to the
+# latest release whose assets include `*-linux.zip`.
+ARG WATCHMAN_VERSION=v2026.05.11.00
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl unzip ca-certificates \
+    && curl -sSLf -o /tmp/watchman.zip \
+        "https://github.com/facebook/watchman/releases/download/${WATCHMAN_VERSION}/watchman-${WATCHMAN_VERSION}-linux.zip" \
+    && unzip -q /tmp/watchman.zip -d /tmp/watchman \
+    && install -m 0755 /tmp/watchman/watchman-${WATCHMAN_VERSION}-linux/bin/watchman /usr/local/bin/watchman \
+    && install -m 0755 /tmp/watchman/watchman-${WATCHMAN_VERSION}-linux/bin/watchmanctl /usr/local/bin/watchmanctl \
+    && install -m 0644 /tmp/watchman/watchman-${WATCHMAN_VERSION}-linux/lib/libglog.so.0 /usr/local/lib/ \
+    && install -m 0644 /tmp/watchman/watchman-${WATCHMAN_VERSION}-linux/lib/libgflags.so.2.2 /usr/local/lib/ \
+    && install -m 0644 /tmp/watchman/watchman-${WATCHMAN_VERSION}-linux/lib/libsnappy.so.1 /usr/local/lib/ \
+    && ldconfig \
+    && install -d -m 1777 /usr/local/var/run/watchman \
+    && rm -rf /tmp/watchman /tmp/watchman.zip /var/lib/apt/lists/*
+
+ARG DEV_USER=chrisharrington
+ARG DEV_UID=1000
+ARG DEV_GID=1000
+
+ENV DEV_USER=${DEV_USER} DEV_UID=${DEV_UID} DEV_GID=${DEV_GID}
+
+# Align the runtime user's UID/GID with the host's so .:/app bind mount file
+# ownership is consistent. Bun base image ships a `bun` user at UID 1000, so
+# rename in place when DEV_UID matches; create fresh otherwise.
+RUN (getent group $DEV_GID > /dev/null 2>&1 || groupadd --gid $DEV_GID $DEV_USER) \
+    && (getent passwd $DEV_UID > /dev/null 2>&1 \
+        && usermod -l $DEV_USER -d /home/$DEV_USER -m $(getent passwd $DEV_UID | cut -d: -f1) \
+        || useradd --uid $DEV_UID --gid $DEV_GID --create-home --shell /bin/bash $DEV_USER)
+
+# Pre-create the install target with DEV_USER ownership. WORKDIR creates dirs
+# as root, which would block `bun install` from creating node_modules.
+RUN install -d -o $DEV_UID -g $DEV_GID /app/app
+
+USER ${DEV_USER}
+WORKDIR /app/app
+
+COPY --chown=${DEV_UID}:${DEV_GID} app/package.json app/bun.lock /app/app/
+RUN bun install --frozen-lockfile
+
+# Re-run install on each start so package.json / bun.lock changes from the
+# bind mount land in the anonymous /app/app/node_modules volume. Near no-op
+# when the lock already matches what's installed.
+#
+# `watchman watch-project` pre-warms the daemon and registers /app as a watch
+# root before Metro launches. Without this, Metro's startup probe for
+# watchman races the daemon's first-spawn cost, often times out, and silently
+# falls back to recursive `fs.watch` for the lifetime of the process. That
+# fallback misses inotify events for writes from the dev container (atomic
+# rename → new inode), which is what made Claude-authored edits invisible to
+# Metro until the container was restarted.
+ENTRYPOINT ["sh", "-c", "bun install --frozen-lockfile && watchman watch-project /app >/dev/null && exec \"$0\" \"$@\""]
+CMD ["bunx", "expo", "start", "--dev-client", "--port", "9097"]

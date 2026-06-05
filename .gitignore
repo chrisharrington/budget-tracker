@@ -1,0 +1,23 @@
+# Environment files — never commit populated secrets.
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules
+server/node_modules
+app/node_modules
+
+# Expo / build artifacts
+.expo
+*.apk
+
+# Server runtime data + legacy compiled output
+server/db
+*.js.map
+
+# Plaintext credentials file (replaced by env vars; never re-commit)
+server/lib/secret.ts
+
+# Claude Code local overrides
+.claude/settings.local.json
