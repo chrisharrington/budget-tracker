@@ -113,3 +113,7 @@ prod-build.apk
 
 # Google Services
 google-services.json
+
+# Android signing keystores
+*.jks
+*.keystore
