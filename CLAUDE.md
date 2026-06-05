@@ -27,7 +27,63 @@ server/
 app/        - Expo React Native app (Android only)
 ```
 
-Both server services share the same MongoDB database and codebase. They are run as separate processes.
+Both server services share the same MongoDB database and codebase. They are run as separate processes (one `server/` image, two commands).
+
+## Local Development Environment
+
+The repo runs as a Docker Compose stack modeled on the irrigo project, giving a consistent dev experience: a long-lived `dev` container VS Code attaches to, an always-on Metro bundler for the phone, the two server processes, and the database — all wired with UID alignment, relative (worktree-portable) bind mounts, and persistent toolchain caches.
+
+| Service | Build | Purpose |
+|---|---|---|
+| `database` | `mongo:6` | MongoDB. Internal-only (`backend` network), no host port, no auth. Health-checked via `mongosh ... ping`. |
+| `api` | `./server` | Express server (`bun run api:run`) on host `${API_PORT}` → 9999. |
+| `mail` | `./server` | IMAP listener (`bun run mail:run`). Same image as `api`, different command. |
+| `dev` | `Dockerfile.dev` | VS Code Dev Container host (`sleep infinity`). Carries bun + node + git + gh + uv + the Android toolchain. Lifecycle independent of `api`/`mail`. |
+| `metro` | `Dockerfile.metro` | Long-running `bunx expo start --dev-client` for the phone dev build. Forces `REACT_NATIVE_PACKAGER_HOSTNAME=${METRO_HOST}` so bundle URLs are phone-reachable. |
+| `mongo-express` | `mongo-express:1` | Optional Mongo GUI, gated behind `--profile tools`. |
+
+Networks: `backend` (internal — `database`, `api`, `mail`, `dev`, `mongo-express`) and `frontend` (outbound internet — `api`, `mail`, `dev`, `metro`, `mongo-express`).
+
+Volumes: per-stack `db-data` (Mongo) and `vscode-server`; **external** `budget-tracker-gradle` and `budget-tracker-android` (shared across worktrees; created once on the host). Anonymous volumes overlay `node_modules` so the baked image install survives the repo bind mount.
+
+### Environment variables
+
+All config is env-driven (see `.env.example` for the authoritative list — copy it to `.env`). The mail credentials and Mongo URI used to live in `server/lib/secret.ts`; that file is gone and must never be re-committed (it's gitignored).
+
+| Variable | Purpose |
+|---|---|
+| `COMPOSE_PROJECT_NAME` | Namespaces containers/networks/per-stack volumes (`budget-tracker`). |
+| `MONGO_URI` | Mongo connection string (default `mongodb://database:27017`; DB name `budget` is hardcoded in `server/lib/data/base.ts`). |
+| `MONGO_DB` | Logical DB name (informational while auth-less). |
+| `NODE_ENV`, `API_PORT` | API runtime + published host port. |
+| `MAIL_HOST`, `MAIL_USER`, `MAIL_PASSWORD` | IMAP mailbox credentials (consumed by `mail`). |
+| `EXPO_ACCESS_TOKEN` | Server-side Expo push auth. |
+| `DEV_USER`, `DEV_UID`, `DEV_GID` | Dev-container UID/GID alignment with the host. |
+| `PRIMARY_GIT_DIR` | Absolute host path to the primary checkout's `.git` (worktree git resolution). |
+| `METRO_HOST`, `METRO_PORT` | Host LAN IP + Metro port for phone reachability. |
+| `MONGO_EXPRESS_USER`/`_PASSWORD`/`_PORT` | mongo-express GUI (tools profile only). |
+
+### One-time / manual setup
+
+These steps are operational and are **not** part of the stack's automated boot:
+
+1. Create the shared external Android volumes: `docker volume create budget-tracker-gradle` and `docker volume create budget-tracker-android`.
+2. Copy `.env.example` → `.env` and fill in every value. **Rotate the Zoho mailbox password** when setting `MAIL_PASSWORD` (it previously sat in plaintext in `server/lib/secret.ts`).
+3. `docker compose up -d --build`. Verify: `database` healthy; `api` serves `/week` on host `${API_PORT}`; `mail` connects to IMAP; `metro` reachable at `${METRO_HOST}:${METRO_PORT}`; `dev` logs its ready line.
+4. VS Code → Dev Containers → attach to `dev`; confirm `/app/server` + `/app/app` are visible and `bun`, `gh`, `git` work.
+5. From inside `dev`: `cd /app/app && bunx expo run:android` against a paired phone. Confirm Gradle/ADB caches persist across `docker compose down && up`. The Android SDK/NDK pins in `Dockerfile.dev` are carried from irrigo (SDK 54/RN 0.81); budget-tracker is on Expo SDK 53/RN 0.79 — if Gradle resolves different versions, verify via `bunx expo prebuild --no-install` and adjust the `ANDROID_*` build args.
+
+### Worktree parallel stacks
+
+Sibling git worktrees get a distinct `COMPOSE_PROJECT_NAME` (directory basename) for free, isolating per-stack volumes. Offset the host ports to avoid collisions:
+
+| Stack | `API_PORT` | `METRO_PORT` | `MONGO_EXPRESS_PORT` |
+|---|---|---|---|
+| Primary (`budget-tracker/`) | 9999 | 9097 | 9098 |
+| Worktree #1 | 9989 | 9197 | 9198 |
+| Worktree #2 | 9979 | 9297 | 9298 |
+
+The `budget-tracker-gradle` / `budget-tracker-android` volumes are shared across all stacks.
 
 ## Stack
 
@@ -86,7 +142,7 @@ Both server services share the same MongoDB database and codebase. They are run 
 
 ## Key Files
 
-- `server/lib/config.ts` — Timezone, cron schedules, weekly budget amount
+- `server/lib/config.ts` — Timezone, cron schedules, weekly budget amount, and env-driven Mongo/mail/Expo settings (`MONGO_URI`, `MAIL_*`, `EXPO_ACCESS_TOKEN`)
 - `server/lib/models.ts` — All data model interfaces
 - `server/lib/balances.ts` — Balance carryover calculation logic
 - `server/mail/inbox.ts` — Email polling and transaction creation
