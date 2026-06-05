@@ -1,34 +1,204 @@
+networks:
+    backend:
+        driver: bridge
+        internal: true
+    frontend:
+        driver: bridge
+
 services:
     database:
         image: mongo:6
-        container_name: budget-tracker-database
+        container_name: ${COMPOSE_PROJECT_NAME}-database
         restart: unless-stopped
         volumes:
-            - /home/chrisharrington/docker/stacks/budget-tracker/server/db:/data/db
-        ports:
-            - 27019:27017
+            - db-data:/data/db
+        healthcheck:
+            test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+        networks:
+            - backend
 
     api:
-        image: budget-tracker-api:latest
-        container_name: budget-tracker-api
+        build:
+            context: ./server
+            dockerfile: Dockerfile
+        image: ${COMPOSE_PROJECT_NAME}-server:latest
+        container_name: ${COMPOSE_PROJECT_NAME}-api
         restart: unless-stopped
-        ports:
-            - 9999:9999
-        volumes:
-            - /home/chrisharrington/docker/stacks/budget-tracker/server:/app
         depends_on:
-            - database
+            database:
+                condition: service_healthy
+        environment:
+            NODE_ENV: ${NODE_ENV}
+            MONGO_URI: ${MONGO_URI}
+            EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN}
+        ports:
+            - "${API_PORT}:9999"
+        volumes:
+            - ./server:/app
+            # Anonymous volume preserves the node_modules baked into the image
+            # under the ./server:/app bind mount.
+            - /app/node_modules
+        command: bun run api:run
         labels:
             - com.centurylinklabs.watchtower.enable=false
+        networks:
+            - backend
+            - frontend
 
     mail:
-        image: budget-tracker-mail:latest
-        container_name: budget-tracker-mail
+        build:
+            context: ./server
+            dockerfile: Dockerfile
+        image: ${COMPOSE_PROJECT_NAME}-server:latest
+        container_name: ${COMPOSE_PROJECT_NAME}-mail
         restart: unless-stopped
-        volumes:
-            - /home/chrisharrington/docker/stacks/budget-tracker/server:/app
         depends_on:
-            - database
+            database:
+                condition: service_healthy
+        environment:
+            NODE_ENV: ${NODE_ENV}
+            MONGO_URI: ${MONGO_URI}
+            MAIL_HOST: ${MAIL_HOST}
+            MAIL_USER: ${MAIL_USER}
+            MAIL_PASSWORD: ${MAIL_PASSWORD}
+            EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN}
+        volumes:
+            - ./server:/app
+            - /app/node_modules
+        command: bun run mail:run
         labels:
             - com.centurylinklabs.watchtower.enable=false
-    
+        networks:
+            - backend
+            - frontend
+
+    # VS Code Dev Container — editor host that VS Code's Dev Containers
+    # extension attaches to. Runs `sleep infinity`; lifecycle independent from
+    # the api/mail services so editor sessions survive their restarts.
+    dev:
+        build:
+            context: .
+            dockerfile: Dockerfile.dev
+            args:
+                DEV_USER: ${DEV_USER}
+                DEV_UID: ${DEV_UID}
+                DEV_GID: ${DEV_GID}
+        container_name: ${COMPOSE_PROJECT_NAME}-dev
+        restart: unless-stopped
+        depends_on:
+            database:
+                condition: service_healthy
+        volumes:
+            # Whole repo bind-mounted so the editor sees server/ and app/.
+            - .:/app
+            # Anonymous volumes overlay the bind mount so the server/ and app/
+            # node_modules baked into the image survive instead of being
+            # shadowed by the host's empty (or absent) node_modules dirs.
+            - /app/server/node_modules
+            - /app/app/node_modules
+            # Shared with host so Claude sessions inside the container see the
+            # same skills/commands and can write auth, history, and session
+            # state back. Same path on both sides because DEV_USER aligns.
+            - ${HOME}/.claude:/home/${DEV_USER}/.claude
+            # User-scope MCP server config lives here (not under .claude/), so
+            # mount it explicitly to expose host-registered MCP servers inside
+            # the container. Read-write because Claude Code updates it.
+            - ${HOME}/.claude.json:/home/${DEV_USER}/.claude.json
+            # Share the host's gh CLI auth so `gh` works without re-login.
+            - ${HOME}/.config/gh:/home/${DEV_USER}/.config/gh
+            # Share the host's git identity (user.name, user.email, signing
+            # keys, aliases) so commits made inside the container are
+            # attributed correctly without per-container configuration.
+            - ${HOME}/.gitconfig:/home/${DEV_USER}/.gitconfig:ro
+            # Worktree git pointer resolution: when this stack is a git
+            # worktree, /app/.git is a pointer file referencing the primary
+            # checkout's .git directory at an absolute host path. Mount that
+            # directory at the same path inside the container so `git` can
+            # follow the gitdir/commondir chain. Harmless when the stack is
+            # the primary checkout. Set PRIMARY_GIT_DIR in `.env`.
+            - ${PRIMARY_GIT_DIR}:${PRIMARY_GIT_DIR}
+            # Gradle build cache + wrapper dists. Survives image rebuilds so
+            # the first `expo run:android` after a rebuild doesn't re-fetch
+            # the entire AGP/Kotlin/RN toolchain from Maven.
+            - budget-tracker-gradle:/home/${DEV_USER}/.gradle
+            # ADB keys + auth state. Persists the "always allow from this
+            # computer" approval the phone grants on first connect.
+            - budget-tracker-android:/home/${DEV_USER}/.android
+            # VS Code Server install (binaries, extensions, workspace state).
+            # Per-stack volume — auto-namespaced by Compose so each worktree
+            # gets its own isolated VS Code Server state.
+            - vscode-server:/home/${DEV_USER}/.vscode-server
+        networks:
+            # backend → reach the database container.
+            # frontend → outbound internet for bun install, gh, etc.
+            - backend
+            - frontend
+
+    # Metro bundler — long-running Expo dev server so the phone dev build can
+    # connect any time without anyone manually starting Metro in a terminal.
+    metro:
+        build:
+            context: .
+            dockerfile: Dockerfile.metro
+            args:
+                DEV_USER: ${DEV_USER}
+                DEV_UID: ${DEV_UID}
+                DEV_GID: ${DEV_GID}
+        container_name: ${COMPOSE_PROJECT_NAME}-metro
+        restart: unless-stopped
+        working_dir: /app/app
+        environment:
+            # Metro auto-detects a "LAN IP" to embed in bundle/asset URLs;
+            # inside the container it picks the docker bridge IP (172.x.x.x)
+            # which the phone can't reach. Forcing the host's LAN address
+            # makes the URLs the phone receives actually resolve.
+            REACT_NATIVE_PACKAGER_HOSTNAME: ${METRO_HOST}
+        volumes:
+            - .:/app
+            # Anonymous volume preserves the app/node_modules baked into the
+            # metro image under the .:/app bind mount.
+            - /app/app/node_modules
+        ports:
+            - "${METRO_PORT}:${METRO_PORT}"
+        command: bunx expo start --dev-client --port ${METRO_PORT}
+        networks:
+            - frontend
+
+    # Optional Mongo GUI, mirrors irrigo's pgAdmin pattern. Gated behind
+    # `--profile tools` so it stays out of the default `up`.
+    mongo-express:
+        image: mongo-express:1
+        container_name: ${COMPOSE_PROJECT_NAME}-mongo-express
+        profiles: ["tools"]
+        restart: unless-stopped
+        environment:
+            ME_CONFIG_MONGODB_URL: ${MONGO_URI}
+            ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER}
+            ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD}
+        ports:
+            - "${MONGO_EXPRESS_PORT}:8081"
+        depends_on:
+            database:
+                condition: service_healthy
+        networks:
+            - backend
+            - frontend
+
+volumes:
+    # Per-stack: Compose auto-namespaces with COMPOSE_PROJECT_NAME so each
+    # worktree gets its own Mongo data volume.
+    db-data:
+    # Per-stack: VS Code Server binaries, extensions, and workspace state.
+    vscode-server:
+    # Shared across all worktrees: Android toolchain cache + ADB pairing
+    # state. External (created once on the host) and referenced by literal
+    # name. One-time setup:
+    #     docker volume create budget-tracker-gradle
+    #     docker volume create budget-tracker-android
+    budget-tracker-gradle:
+        external: true
+    budget-tracker-android:
+        external: true
