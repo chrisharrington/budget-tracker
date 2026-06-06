@@ -41,6 +41,7 @@
     "@types/mongodb": "^3.6.20",
     "@types/node-imap": "^0.9.3",
     "cors": "^2.8.5",
+    "mongodb-memory-server": "^11.2.0",
     "nodemon": "^2.0.22",
     "typescript": "^6.0.3"
   },
