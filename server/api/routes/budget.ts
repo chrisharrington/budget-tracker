@@ -58,7 +58,7 @@ export default class BudgetRoute {
             console.log('Request received: GET /history');
         
             const transactions = await TransactionService.find({ ignored: false }),
-                dict = {};
+                dict: { [weekLabel: string]: { balance: number } } = {};
 
             transactions.forEach((transaction: Transaction) => {
                 let week = dayjs(transaction.date).subtract(getTimezoneOffset('America/Edmonton'), 'minute').startOf('day');
