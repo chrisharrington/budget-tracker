@@ -27,8 +27,13 @@ export default class Notifications {
     
         const device = await DeviceService.findOne({ token }),
             transaction = await TransactionService.findOne({}, { date: -1 });
-        
-        await this.send(transaction, device);
+
+        if (!transaction) {
+            console.warn('[mail] No transaction found to send a test notification for.');
+            return;
+        }
+
+        await this.send(transaction, device ?? undefined);
     }
     
     static async test2(token?: string) : Promise<void> {

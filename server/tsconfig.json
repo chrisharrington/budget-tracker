@@ -1,9 +1,9 @@
 {
     "compilerOptions": {
       "target": "es6",
-      "module": "commonjs",
-      "moduleResolution": "node",
-      "baseUrl": ".",
+      "module": "preserve",
+      "moduleResolution": "bundler",
+      "strict": true,
       "jsx": "react",
       "paths": {
           "@root/*": ["./*"],
@@ -19,11 +19,9 @@
     "include": [
       "**/*.ts",
       "**/*.tsx",
-      "secret.ts",
       "./node_modules/@types/**/*.d.ts"
     ],
     "exclude": [
       "node_modules"
-    ],
-    "allowSyntheticDefaultImports": true
+    ]
   }

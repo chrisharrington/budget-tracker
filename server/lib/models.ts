@@ -1,11 +1,11 @@
 import { ExpoPushErrorTicket, ExpoPushSuccessTicket } from 'expo-server-sdk';
 
 export class Id {
-    _id: string;
+    _id!: string;
 }
 
 export class Device extends Id {
-    token: string;
+    token!: string;
 
     static fromRaw(raw: any) : Device {
         const device = new Device();
@@ -16,10 +16,10 @@ export class Device extends Id {
 }
 
 export class Budget {
-    date: Date;
-    weeklyAmount: number;
-    balance: number;
-    transactions: Transaction[];
+    date!: Date;
+    weeklyAmount!: number;
+    balance!: number;
+    transactions!: Transaction[];
     
     constructor(initializer: Partial<Budget>) {
         Object.assign(this, initializer);
@@ -27,11 +27,11 @@ export class Budget {
 }
 
 export class Transaction extends Id {
-    amount: number;
-    date: Date;
-    description: string;
-    owner: string;
-    ignored: boolean;
+    amount!: number;
+    date!: Date;
+    description!: string;
+    owner!: string;
+    ignored!: boolean;
     tags: Tag[];
     isAllowancePayment?: boolean;
 
@@ -84,14 +84,14 @@ export class Transaction extends Id {
 }
 
 export class Tag extends Id {
-    name: string;
-    ignore: boolean;
+    name!: string;
+    ignore!: boolean;
 }
 
 export class NotificationTicket extends Id {
-    status: string;
-    notificationId: string;
-    receiptAcquired: boolean;
+    status!: string;
+    notificationId!: string;
+    receiptAcquired!: boolean;
 
     static fromRaw(raw: any) : NotificationTicket {
         const ticket = new NotificationTicket();
@@ -103,10 +103,10 @@ export class NotificationTicket extends Id {
 }
 
 export class Balance extends Id {
-    weekOf: Date;
-    amount: number;
+    weekOf!: Date;
+    amount!: number;
 }
 
 export class OneTime extends Id {
-    balance: number;
+    balance!: number;
 }

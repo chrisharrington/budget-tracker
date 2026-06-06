@@ -11,12 +11,18 @@ class OneTimeService extends Base<OneTime> {
     }
 
     async get() : Promise<OneTime> {
-        return await this.findOne({});
+        const oneTime = await this.findOne({});
+        if (!oneTime)
+            throw new Error('No one-time balance record found.');
+        return oneTime;
     }
 
     async applyTransaction(newTransaction: Transaction) : Promise<void> {
         const oldTransaction = await TransactionService.findById(newTransaction._id),
             oneTime = await this.get();
+
+        if (!oldTransaction)
+            throw new Error(`Transaction not found: ${newTransaction._id}.`);
 
         if (oldTransaction.tags.every(t => t.name !== ONE_TIME_TAG) && newTransaction.tags.some(t => t.name === ONE_TIME_TAG))
             oneTime.balance -= newTransaction.amount;

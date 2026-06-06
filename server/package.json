@@ -7,6 +7,7 @@
   "author": "Chris Harrington <chrisharrington99@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "type-check": "tsc --noEmit",
     "api:run": "bun --watch api/app.ts",
     "mail:run": "bun --watch mail/app.ts",
     "database": "docker exec -it $(docker ps --format '{{.ID}} {{.Names}}' | grep 'budget-tracker-database' | cut -d ' ' -f1) mongosh budget"
@@ -33,12 +34,13 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@types/cron": "^2.4.3",
+    "@types/cors": "^2.8.19",
     "@types/imap": "^0.8.40",
+    "@types/mongodb": "^3.6.20",
     "@types/node-imap": "^0.9.3",
     "cors": "^2.8.5",
     "nodemon": "^2.0.22",
-    "typescript": "^3.9.10"
+    "typescript": "^6.0.3"
   },
   "trustedDependencies": [
     "nodemailer"

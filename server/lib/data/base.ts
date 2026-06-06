@@ -81,10 +81,10 @@ export class Base<TModel> {
         let collection = await this.connect();
 
         return new Promise<void>((resolve, reject) => {
-            let update = {};
+            const update: { [key: string]: unknown } = {};
             Object.keys(model).forEach(key => {
                 if (key !== '_id')
-                    update[key] = model[key];
+                    update[key] = (model as unknown as { [key: string]: unknown })[key];
             });
             collection.updateOne({
                 _id: new ObjectID(model._id)

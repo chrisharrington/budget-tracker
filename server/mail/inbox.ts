@@ -2,14 +2,12 @@ import Imap from 'node-imap';
 import { MailParser } from 'mailparser-mit';
 import dayjs from 'dayjs';
 
-import Message from './message';
-
 const HOURS: number = 1;
 
 export default class Inbox {
-    private imap: Imap;
-    private onMessageCallback: (message: Message, date: Date) => void;
-    private ready: Promise<void>;
+    private imap!: Imap;
+    private onMessageCallback!: (message: string, date: Date) => void;
+    private ready!: Promise<void>;
     private host: string;
     private emailAddress: string;
     private password: string;
