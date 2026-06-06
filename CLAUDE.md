@@ -177,6 +177,7 @@ Current scripts:
 
 | Subproject | Script | Purpose |
 |---|---|---|
+| `server/` | `test` | Run the backend test suite with Bun's runner (`bun test`) |
 | `server/` | `type-check` | Type-check the backend with `tsc --noEmit` (no emit) |
 | `server/` | `api:run` | Run the Express API with `--watch` reload |
 | `server/` | `mail:run` | Run the IMAP mail listener with `--watch` reload |
@@ -188,14 +189,13 @@ Current scripts:
 
 ## Testing
 
-The backend has a type-check script — **always** type-check via `bun --cwd=./server run type-check` (never invoke `tsc` directly). The `app/` subproject has no `type-check` script yet, and neither subproject has a `test` runner wired up. When tests are added, follow these conventions:
+The backend has a type-check script — **always** type-check via `bun --cwd=./server run type-check` (never invoke `tsc` directly). The backend test runner is Bun's built-in runner; run the suite with `bun --cwd=./server test`. Test files are included in the type-check (`@types/bun` provides the `bun:test` types), so they must be strict-clean. The `app/` subproject has no `type-check` or `test` script wired up yet. Follow these conventions:
 
 - **Every change to a code file requires matching test coverage** — new behavior gets new tests, modified behavior gets updated tests. A change isn't complete until the tests cover it.
 - Tests are behavior-driven acceptance tests. Verify via observable behavior (return values, rendered output), not by inspecting internal state.
 - For UI tests, query elements by visible text, placeholder, or label — never by test IDs.
-- Don't mock first-party components when rendering them in tests. Mock at external boundaries (network, time, third-party SDKs).
-- Place test files alongside the source they test, named `test.ts` or `test.tsx`.
-- **Folder-per-tested-subject.** Anything that requires tests gets its own folder. The subject is `index.(ts|tsx)`; the test is `.test.(ts|tsx)` inside the same folder. Hook folder names drop the `use-` prefix (the export inside is still `useSystem`). Plain modules that have no tests (type declarations, trivial factory functions) stay as flat files.
+- Don't mock first-party components when rendering them in tests. Mock at external boundaries (network, time, third-party SDKs). For data-layer tests, drive the real `Base` class against an ephemeral `mongodb-memory-server` instance — point it there by setting `Config.databaseConnectionString` before constructing the repository (see `server/lib/data/base/.test.ts`).
+- **Folder-per-tested-subject.** Anything that requires tests gets its own folder. The subject is `index.(ts|tsx)`; the test sits alongside it in the same folder, named `.test.ts` / `.test.tsx` (Bun discovers this dotfile; the test imports the subject with `import … from '.'`). Hook folder names drop the `use-` prefix (the export inside is still `useSystem`). Plain modules that have no tests (type declarations, trivial factory functions) stay as flat files.
 
 ## Tickets
 

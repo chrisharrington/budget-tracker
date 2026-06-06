@@ -7,6 +7,7 @@
   "author": "Chris Harrington <chrisharrington99@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "test": "bun test",
     "type-check": "tsc --noEmit",
     "api:run": "bun --watch api/app.ts",
     "mail:run": "bun --watch mail/app.ts",
@@ -34,11 +35,13 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@types/bun": "^1.3.14",
     "@types/cors": "^2.8.19",
     "@types/imap": "^0.8.40",
     "@types/mongodb": "^3.6.20",
     "@types/node-imap": "^0.9.3",
     "cors": "^2.8.5",
+    "mongodb-memory-server": "^11.2.0",
     "nodemon": "^2.0.22",
     "typescript": "^6.0.3"
   },
