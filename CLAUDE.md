@@ -97,7 +97,7 @@ The `budget-tracker-gradle` / `budget-tracker-android` volumes are shared across
 | Push notifications | Expo Server SDK |
 | Date/time | dayjs (timezone: America/Edmonton) |
 | Mobile | React Native (Expo), Android only |
-| Language | TypeScript (server: 3.9.10, app: 5.1.3) |
+| Language | TypeScript (server: 6.0.3, app: 5.1.3) |
 
 ## Data Model
 
@@ -177,6 +177,7 @@ Current scripts:
 
 | Subproject | Script | Purpose |
 |---|---|---|
+| `server/` | `type-check` | Type-check the backend with `tsc --noEmit` (no emit) |
 | `server/` | `api:run` | Run the Express API with `--watch` reload |
 | `server/` | `mail:run` | Run the IMAP mail listener with `--watch` reload |
 | `server/` | `database` | Open a `mongosh` shell against the running database container |
@@ -187,7 +188,7 @@ Current scripts:
 
 ## Testing
 
-Test runners aren't wired up yet — there's no `test` or `type-check` script in either subproject. When tests are added, follow these conventions:
+The backend has a type-check script — **always** type-check via `bun --cwd=./server run type-check` (never invoke `tsc` directly). The `app/` subproject has no `type-check` script yet, and neither subproject has a `test` runner wired up. When tests are added, follow these conventions:
 
 - **Every change to a code file requires matching test coverage** — new behavior gets new tests, modified behavior gets updated tests. A change isn't complete until the tests cover it.
 - Tests are behavior-driven acceptance tests. Verify via observable behavior (return values, rendered output), not by inspecting internal state.
