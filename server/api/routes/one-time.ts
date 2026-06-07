@@ -16,7 +16,7 @@ export default class TagRoute {
             response.status(200).send(JSON.stringify(oneTime));
         } catch (e) {
             request.log.error({ err: e }, 'Request failed: GET /one-time/balance');
-            response.status(500).send(e);
+            response.sendStatus(500);
         }
     }
 }

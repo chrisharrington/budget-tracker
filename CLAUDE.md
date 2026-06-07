@@ -58,6 +58,7 @@ All config is env-driven (see `.env.example` for the authoritative list — copy
 | `NODE_ENV`, `API_PORT` | API runtime + published host port. |
 | `API_KEY` | Shared secret for API auth; the app sends it as a Bearer token (server-side enforcement forthcoming — see the BTAPI/BTAPP enforcement tickets). |
 | `LOG_LEVEL` | pino log level (`trace`…`fatal`; default `info`), read by `server/lib/logger`. |
+| `CORS_ORIGINS` | Comma-separated CORS allowlist for the API (empty = no browser cross-origin allowed; the app sends no Origin header so is unaffected). |
 | `MAIL_HOST`, `MAIL_USER`, `MAIL_PASSWORD` | IMAP mailbox credentials (consumed by `mail`; the `mail` process fails loud at startup if any are missing). |
 | `EXPO_ACCESS_TOKEN` | Server-side Expo push auth. |
 | `DEV_USER`, `DEV_UID`, `DEV_GID` | Dev-container UID/GID alignment with the host. |

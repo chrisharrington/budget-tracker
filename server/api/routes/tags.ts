@@ -16,7 +16,7 @@ export default class TagRoute {
             response.status(200).send(tags);
         } catch (e) {
             request.log.error({ err: e }, 'Request failed: GET /tags/recent');
-            response.status(500).send(e);
+            response.sendStatus(500);
         }
     }
 }

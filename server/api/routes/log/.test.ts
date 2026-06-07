@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'bun:test';
+import express from 'express';
+import type { AddressInfo } from 'net';
 import pino, { Logger } from 'pino';
 
-import { normalizeLogEntry, recordClientLog } from '.';
+import { createLogRateLimiter, normalizeLogEntry, recordClientLog } from '.';
 
 describe('normalizeLogEntry', () => {
     test('parses a structured JSON entry', () => {
@@ -62,5 +64,26 @@ describe('recordClientLog', () => {
         const withoutError = capture();
         recordClientLog(JSON.stringify({ message: 'ok' }), withoutError.log);
         expect(withoutError.records()[0].err).toBeUndefined();
+    });
+});
+
+describe('createLogRateLimiter', () => {
+    test('responds 429 once the per-window limit is exceeded', async () => {
+        const app = express();
+        app.post('/log', createLogRateLimiter(2), (_request, response) => response.sendStatus(200));
+        const server = app.listen(0);
+        const { port } = server.address() as AddressInfo;
+
+        try {
+            const codes: number[] = [];
+            for (let i = 0; i < 3; i++) {
+                const response = await fetch(`http://127.0.0.1:${port}/log`, { method: 'POST' });
+                codes.push(response.status);
+            }
+
+            expect(codes).toEqual([200, 200, 429]);
+        } finally {
+            server.close();
+        }
     });
 });
