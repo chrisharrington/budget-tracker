@@ -16,8 +16,7 @@ dayjs.extend(utc);
 
 (async () => {
     try {
-        if (!Config.mailHost || !Config.mailEmailAddress || !Config.mailPassword)
-            console.warn('[mail] Missing IMAP credentials - set MAIL_HOST, MAIL_USER, and MAIL_PASSWORD. The listener will not be able to connect.');
+        Config.assertMailConfig();
 
         const inbox = new Inbox(Config.mailHost, Config.mailEmailAddress, Config.mailPassword);
 

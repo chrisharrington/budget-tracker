@@ -2,10 +2,12 @@ import dayjs from 'dayjs';
 
 export default class Config {
     static databaseConnectionString: string = process.env.MONGO_URI ?? 'mongodb://database:27017';
+    static mongoDb: string = process.env.MONGO_DB ?? 'budget';
     static mailHost: string = process.env.MAIL_HOST ?? '';
     static mailEmailAddress: string = process.env.MAIL_USER ?? '';
     static mailPassword: string = process.env.MAIL_PASSWORD ?? '';
     static expoAccessToken: string | undefined = process.env.EXPO_ACCESS_TOKEN;
+    static apiKey: string | undefined = process.env.API_KEY;
     static timezone: string = 'America/Edmonton';
     static remainingBalanceUpdateCron: string = '0 0 * * MON';
     static oneTimeBalanceUpdateCron: string = '0 0 1 * *';
@@ -13,6 +15,18 @@ export default class Config {
     static allowanceBaseWeeklyAmount: number = 5;
     static allowanceIncrement: number = 1;
     static allowanceMax: number = 10;
+
+    // Fail loud at startup rather than silently connecting with empty credentials. Reads the static
+    // fields (not process.env directly) so they remain the single source of truth.
+    static assertMailConfig() {
+        const missing: string[] = [];
+        if (!this.mailHost) missing.push('MAIL_HOST');
+        if (!this.mailEmailAddress) missing.push('MAIL_USER');
+        if (!this.mailPassword) missing.push('MAIL_PASSWORD');
+
+        if (missing.length)
+            throw new Error(`Missing required mail configuration: ${missing.join(', ')}. Set these environment variables.`);
+    }
 
     static weeklyAmount = (date: Date) => {
         if (date >= new Date(2025, 0, 1))
