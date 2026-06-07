@@ -48,7 +48,7 @@ export default class BudgetRoute {
             }));
         } catch (e) {
             request.log.error({ err: e }, 'Request failed: GET /week');
-            response.status(500).send(e);
+            response.sendStatus(500);
         }
     }
 
@@ -80,7 +80,7 @@ export default class BudgetRoute {
             response.status(200).send(history);
         } catch (e) {
             request.log.error({ err: e }, 'Request failed: GET /history');
-            response.status(500).send(e);
+            response.sendStatus(500);
         }
     }
 
@@ -104,7 +104,7 @@ export default class BudgetRoute {
             response.sendStatus(200);
         } catch (e) {
             request.log.error({ err: e }, 'Request failed: POST /transaction');
-            response.status(500).send(e);
+            response.sendStatus(500);
         }
     }
 
@@ -137,7 +137,7 @@ export default class BudgetRoute {
             response.sendStatus(200);
         } catch (e) {
             request.log.error({ err: e }, 'Request failed: POST /transaction/split');
-            response.status(500).send(e);
+            response.sendStatus(500);
         }
     }
 
@@ -177,7 +177,7 @@ export default class BudgetRoute {
             }));
         } catch (e) {
             request.log.error({ err: e }, 'Request failed: GET /transaction/sum-monthly');
-            response.status(500).send(e);
+            response.sendStatus(500);
         }
     }
 

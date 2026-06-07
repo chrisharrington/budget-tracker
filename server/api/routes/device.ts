@@ -17,7 +17,7 @@ export default class DeviceRoute {
             response.sendStatus(200);
         } catch (e) {
             request.log.error({ err: e }, 'Request failed: POST /device');
-            response.status(500).send(e);
+            response.sendStatus(500);
         }
     }
 }
