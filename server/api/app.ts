@@ -3,6 +3,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import pinoHttp from 'pino-http';
+import Config from '@lib/config';
 import logger from '@lib/logger';
 import Budget from '@api/routes/budget';
 import Device from '@api/routes/device';
@@ -24,7 +25,7 @@ class Server {
     async run() {
         const app = express();
         app.use(pinoHttp({ logger }));
-        app.use(cors());
+        app.use(cors({ origin: Config.corsOrigins }));
         app.use(bodyParser.json());
 
         Budget.initialize(app);

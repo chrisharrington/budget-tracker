@@ -1,5 +1,10 @@
 import dayjs from 'dayjs';
 
+// Parses a comma-separated `CORS_ORIGINS` value into a trimmed allowlist, dropping blank entries.
+export function parseCorsOrigins(value: string | undefined): string[] {
+    return (value ?? '').split(',').map(origin => origin.trim()).filter(Boolean);
+}
+
 export default class Config {
     static databaseConnectionString: string = process.env.MONGO_URI ?? 'mongodb://database:27017';
     static mongoDb: string = process.env.MONGO_DB ?? 'budget';
@@ -8,6 +13,7 @@ export default class Config {
     static mailPassword: string = process.env.MAIL_PASSWORD ?? '';
     static expoAccessToken: string | undefined = process.env.EXPO_ACCESS_TOKEN;
     static apiKey: string | undefined = process.env.API_KEY;
+    static corsOrigins: string[] = parseCorsOrigins(process.env.CORS_ORIGINS);
     static timezone: string = 'America/Edmonton';
     static remainingBalanceUpdateCron: string = '0 0 * * MON';
     static oneTimeBalanceUpdateCron: string = '0 0 1 * *';

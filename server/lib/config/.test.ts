@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 
-import Config from '.';
+import Config, { parseCorsOrigins } from '.';
 
 // Dates are built with `new Date(year, monthIndex, day)` (month is 0-indexed), matching how the
 // tier boundaries are declared in the subject, so comparisons are timezone-consistent.
@@ -54,6 +54,31 @@ describe('Config.apiKey', () => {
     test('is undefined when API_KEY is unset (no default)', () => {
         // Unlike mongoDb, apiKey has no fallback — a missing key reads as undefined, never ''.
         expect(Config.apiKey).toBeUndefined();
+    });
+});
+
+describe('parseCorsOrigins', () => {
+    test('returns an empty allowlist for undefined or empty input', () => {
+        expect(parseCorsOrigins(undefined)).toEqual([]);
+        expect(parseCorsOrigins('')).toEqual([]);
+    });
+
+    test('parses a single origin', () => {
+        expect(parseCorsOrigins('https://budget.example.com')).toEqual(['https://budget.example.com']);
+    });
+
+    test('splits a comma-separated list and trims surrounding whitespace', () => {
+        expect(parseCorsOrigins('https://a.example.com, https://b.example.com ')).toEqual([
+            'https://a.example.com',
+            'https://b.example.com'
+        ]);
+    });
+
+    test('drops blank entries from trailing or doubled commas', () => {
+        expect(parseCorsOrigins('https://a.example.com,,https://b.example.com,')).toEqual([
+            'https://a.example.com',
+            'https://b.example.com'
+        ]);
     });
 });
 
