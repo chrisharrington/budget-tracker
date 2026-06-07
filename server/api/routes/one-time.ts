@@ -8,15 +8,14 @@ export default class TagRoute {
         app.get('/one-time/balance', this.getOneTimeBalance.bind(this));
     }
 
-    private static async getOneTimeBalance(_: Request, response: Response) {
+    private static async getOneTimeBalance(request: Request, response: Response) {
         try {
-            console.log('Request received: GET /one-time/balance');
+            request.log.info('Request received: GET /one-time/balance');
 
             const oneTime = await OneTimeService.get();
             response.status(200).send(JSON.stringify(oneTime));
         } catch (e) {
-            console.log('Request failed: GET /one-time/balance');
-            console.error(e);
+            request.log.error({ err: e }, 'Request failed: GET /one-time/balance');
             response.status(500).send(e);
         }
     }

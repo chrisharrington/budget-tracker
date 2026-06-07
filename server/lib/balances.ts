@@ -6,7 +6,10 @@ import { Balance, Tag, Transaction } from '@lib/models';
 import TransactionService from '@lib/data/transaction';
 import BalanceService from '@lib/data/balance';
 import OneTimeService from '@lib/data/one-time';
+import logger from '@lib/logger';
 import Config from './config';
+
+const log = logger.child({ module: 'balances' });
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -17,12 +20,12 @@ export function startMonthlyOneTimeBalanceIncreaseJob() {
         oneTime.balance += Config.oneTimeAmount();
         await OneTimeService.updateOne(oneTime);
 
-        console.log(`Updated one-time balance to ${oneTime.balance}.`);
+        log.info(`Updated one-time balance to ${oneTime.balance}.`);
     }, null, true, Config.timezone);
 
     job.start();
 
-    console.log(`Started monthly job to update one-time balance. Next run on ${job.nextDates()}`);
+    log.info(`Started monthly job to update one-time balance. Next run on ${job.nextDates()}`);
 }
 
 export function startWeeklyRemainingBalanceJob() {
@@ -34,17 +37,17 @@ export function startWeeklyRemainingBalanceJob() {
 
     job.start();
 
-    console.log(`Started weekly job to update remaining balance. Next run on ${job.nextDates()}`);
+    log.info(`Started weekly job to update remaining balance. Next run on ${job.nextDates()}`);
 }
 
 export async function upsertBalanceFromPreviousWeek(force: boolean = false) {
-    console.log('Updating remaining balance for previous week.');
+    log.info('Updating remaining balance for previous week.');
 
     const startOfPreviousWeek = dayjs().tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week').toDate();
-    console.log('Previous week start date is ' + startOfPreviousWeek);
+    log.info('Previous week start date is ' + startOfPreviousWeek);
     let balance = await BalanceService.findOne({ weekOf: startOfPreviousWeek });
     if (balance && !force) {
-        console.log('Balance found. Skipping.');
+        log.info('Balance found. Skipping.');
         return;
     }
         
@@ -75,5 +78,5 @@ export async function upsertBalanceFromPreviousWeek(force: boolean = false) {
     balance.amount = Config.weeklyAmount(startOfPreviousWeek) - sum;
     await BalanceService.updateOne(balance);
 
-    console.log(`${isUpdate ? 'Updated' : 'Inserted'} remaining balance with amount ${balance.amount.toFixed(2)}.`)
+    log.info(`${isUpdate ? 'Updated' : 'Inserted'} remaining balance with amount ${balance.amount.toFixed(2)}.`)
 }

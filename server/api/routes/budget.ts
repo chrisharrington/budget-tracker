@@ -25,7 +25,7 @@ export default class BudgetRoute {
 
     private static async getBudgetForWeek(request: Request, response: Response) {
         try {
-            console.log('Request received: GET /week');
+            request.log.info('Request received: GET /week');
 
             if (!request.query || !request.query.date)
                 throw new Error('Missing date parameter in query string.');
@@ -38,7 +38,7 @@ export default class BudgetRoute {
                 transactions = await TransactionService.getForWeek(date),
                 weeklyAmount = Config.weeklyAmount(date);
 
-            console.log('Weekly amount: ' + weeklyAmount);
+            request.log.info('Weekly amount: ' + weeklyAmount);
 
             response.status(200).send(new Budget({
                 date,
@@ -47,16 +47,15 @@ export default class BudgetRoute {
                 transactions
             }));
         } catch (e) {
-            console.log('Request failed: GET /week');
-            console.error(e);
+            request.log.error({ err: e }, 'Request failed: GET /week');
             response.status(500).send(e);
         }
     }
 
-    private static async getHistory(_: Request, response: Response) {
+    private static async getHistory(request: Request, response: Response) {
         try {
-            console.log('Request received: GET /history');
-        
+            request.log.info('Request received: GET /history');
+
             const transactions = await TransactionService.find({ ignored: false }),
                 dict: { [weekLabel: string]: { balance: number } } = {};
 
@@ -80,21 +79,20 @@ export default class BudgetRoute {
 
             response.status(200).send(history);
         } catch (e) {
-            console.log('Request failed: GET /history');
-            console.error(e);
+            request.log.error({ err: e }, 'Request failed: GET /history');
             response.status(500).send(e);
         }
     }
 
     private static async updateTransaction(request: Request, response: Response) {
         try {
-            console.log('Request received: POST /transaction');
+            request.log.info('Request received: POST /transaction');
 
             const transaction = Transaction.fromRaw(request.body);
 
             var valid = await this.checkTransaction(transaction);
             if (!valid) {
-                console.error('Cannot update transactions from further back than the previous week.');
+                request.log.warn('Cannot update transactions from further back than the previous week.');
                 response.sendStatus(400);
                 return;
             }
@@ -105,21 +103,20 @@ export default class BudgetRoute {
 
             response.sendStatus(200);
         } catch (e) {
-            console.log('Request failed: POST /transaction');
-            console.error(e);
+            request.log.error({ err: e }, 'Request failed: POST /transaction');
             response.status(500).send(e);
         }
     }
 
     private static async splitTransaction(request: Request, response: Response) {
         try {
-            console.log('Request received: POST /transaction/split');
+            request.log.info('Request received: POST /transaction/split');
 
             const transaction = Transaction.fromRaw(request.body.transaction);
 
             var valid = await this.checkTransaction(transaction);
             if (!valid) {
-                console.error('Cannot update transactions from further back than the previous week.');
+                request.log.warn('Cannot update transactions from further back than the previous week.');
                 response.sendStatus(400);
                 return;
             }
@@ -139,15 +136,14 @@ export default class BudgetRoute {
 
             response.sendStatus(200);
         } catch (e) {
-            console.log('Request failed: POST /transaction/split');
-            console.error(e);
+            request.log.error({ err: e }, 'Request failed: POST /transaction/split');
             response.status(500).send(e);
         }
     }
 
     private static async getSummedMonthlyAmountForTag(request: Request, response: Response) {
         try {
-            console.log('Request received: GET /transaction/sum-monthly');
+            request.log.info('Request received: GET /transaction/sum-monthly');
 
             if (!request.query.start)
                 return response.status(400).send('Missing start date.');
@@ -180,8 +176,7 @@ export default class BudgetRoute {
                     .map(t => ({ description: t.description, amount: t.amount, date: dayjs(t.date).format() }))
             }));
         } catch (e) {
-            console.log('Request failed: GET /transaction/sum-monthly');
-            console.error(e);
+            request.log.error({ err: e }, 'Request failed: GET /transaction/sum-monthly');
             response.status(500).send(e);
         }
     }

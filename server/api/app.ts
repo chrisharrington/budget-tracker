@@ -2,6 +2,8 @@ import 'module-alias/register';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import pinoHttp from 'pino-http';
+import logger from '@lib/logger';
 import Budget from '@api/routes/budget';
 import Device from '@api/routes/device';
 import Tags from '@api/routes/tags';
@@ -21,6 +23,7 @@ class Server {
 
     async run() {
         const app = express();
+        app.use(pinoHttp({ logger }));
         app.use(cors());
         app.use(bodyParser.json());
 
@@ -44,7 +47,7 @@ class Server {
         //     ignored: false
         // } as Transaction);
 
-        app.listen(this.port, '0.0.0.0', () => console.log(`Listening on port ${this.port}...`));
+        app.listen(this.port, '0.0.0.0', () => logger.info(`Listening on port ${this.port}...`));
     }
 }
 
