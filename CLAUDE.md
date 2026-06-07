@@ -57,6 +57,7 @@ All config is env-driven (see `.env.example` for the authoritative list — copy
 | `MONGO_DB` | Logical DB name selecting the Mongo database (default `budget`; read via `Config.mongoDb` in `server/lib/data/base/index.ts`). |
 | `NODE_ENV`, `API_PORT` | API runtime + published host port. |
 | `API_KEY` | Shared secret for API auth; the app sends it as a Bearer token (server-side enforcement forthcoming — see the BTAPI/BTAPP enforcement tickets). |
+| `LOG_LEVEL` | pino log level (`trace`…`fatal`; default `info`), read by `server/lib/logger`. |
 | `MAIL_HOST`, `MAIL_USER`, `MAIL_PASSWORD` | IMAP mailbox credentials (consumed by `mail`; the `mail` process fails loud at startup if any are missing). |
 | `EXPO_ACCESS_TOKEN` | Server-side Expo push auth. |
 | `DEV_USER`, `DEV_UID`, `DEV_GID` | Dev-container UID/GID alignment with the host. |
@@ -158,7 +159,7 @@ The `budget-tracker-gradle` / `budget-tracker-android` volumes are shared across
 - Object property names are **lowerCamelCase** in TS, JSON, and config files alike. The only place snake_case is allowed is when a contract is owned by an external system (third-party API request/response bodies, etc.).
 - Single quotes for string literals. If a string contains an apostrophe, use backticks (`) instead of double quotes to avoid escaping.
 - Dates as ISO-8601 UTC; align DTOs with server contracts. This codebase uses `dayjs` for date handling (timezone `America/Edmonton`).
-- Log liberally via `console.log` / `console.warn` / `console.error` for external calls, state transitions, errors, and significant decisions.
+- Log liberally for external calls, state transitions, errors, and significant decisions — but **never `console.*`**. Use the shared pino logger at `@lib/logger` (`logger.info`/`warn`/`error`, etc.); attach errors as `logger.error({ err }, 'message')` and structured fields as the first arg. In Express route handlers prefer `request.log` (carries the per-request correlation id from `pino-http`); use `logger.child({ module: '…' })` for a scoped context elsewhere. Level comes from `LOG_LEVEL`. The app posts client logs to `/log` as JSON `{ level, message, error }`.
 - **Use the path aliases defined in each subproject's `tsconfig.json` instead of long relative paths.** `app/` declares `@lib/*` and `@assets/*`; `server/` declares `@root/*`, `@lib/*`, and `@api/*`. Sibling (`./bar`) and same-folder (`'.'`) imports stay relative. Single-step parent imports (`'../bar'`) are tolerated but aliases are preferred. Any specifier containing two or more `../` traversals should be rewritten through an alias.
 
 ## Shell commands

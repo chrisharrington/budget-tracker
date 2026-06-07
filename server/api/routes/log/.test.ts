@@ -21,6 +21,11 @@ describe('normalizeLogEntry', () => {
     test('clamps an unknown level to info', () => {
         expect(normalizeLogEntry(JSON.stringify({ level: 'verbose', message: 'hi' })).level).toBe('info');
     });
+
+    test('treats valid JSON that is not an object as the raw message', () => {
+        expect(normalizeLogEntry('[1,2,3]')).toEqual({ level: 'info', message: '[1,2,3]' });
+        expect(normalizeLogEntry('42')).toEqual({ level: 'info', message: '42' });
+    });
 });
 
 describe('recordClientLog', () => {
