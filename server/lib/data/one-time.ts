@@ -1,6 +1,7 @@
 import { Base } from './base';
 
 import TransactionService from '@lib/data/transaction';
+import logger from '@lib/logger';
 import { OneTime, Transaction } from '@lib/models';
 
 const ONE_TIME_TAG = 'one-time';
@@ -33,7 +34,7 @@ class OneTimeService extends Base<OneTime> {
     }
 
     async addAmount(amount: number) : Promise<void> {
-        console.log('Adding one-time amount: ' + amount);
+        logger.info({ amount }, 'Adding one-time amount.');
 
         const oneTime = await this.get();
         oneTime.balance += amount;

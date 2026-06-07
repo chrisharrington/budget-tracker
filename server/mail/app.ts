@@ -5,11 +5,14 @@ import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 
 import Config from '@lib/config';
+import logger from '@lib/logger';
 import { Transaction } from '@lib/models';
 import TransactionService from '@lib/data/transaction';
 
 import Inbox from './inbox';
 import Notifications from './notifications';
+
+const log = logger.child({ module: 'mail' });
 
 dayjs.extend(timezone);
 dayjs.extend(utc);
@@ -24,10 +27,10 @@ Config.assertMailConfig();
 
         inbox.onMessage(async (message: string, date: Date) => {
             try {
-                console.log(`[mail] Message received.`);
+                log.info('Message received.');
 
                 const transaction = Transaction.fromMessage(message, date);
-                console.log(`[mail] Built transaction: ${JSON.stringify(transaction)}`);
+                log.info({ transaction }, 'Built transaction.');
 
                 const existingTransactions = await TransactionService.find({
                     description: { $regex: new RegExp(`^${transaction.description}`) },
@@ -44,10 +47,9 @@ Config.assertMailConfig();
                     Notifications.send(transaction),
                     TransactionService.insertOne(transaction)
                 ]);
-                console.log('[mail] Transaction saved and notification sent.');
+                log.info('Transaction saved and notification sent.');
             } catch (e) {
-                console.log('[mail] Transaction failed to save.');
-                console.error(e);
+                log.error({ err: e }, 'Transaction failed to save.');
             }
         });
 
@@ -55,9 +57,8 @@ Config.assertMailConfig();
 
         // Notifications.test('ExponentPushToken[I9JfuHAzhmz1wwQ6k_QEJp]');
 
-        console.log('[mail] Listening for messages...');
+        log.info('Listening for messages...');
     } catch (e) {
-        console.log('[mail] Error during message handling.');
-        console.error(e);
+        log.error({ err: e }, 'Error during message handling.');
     }
 })();

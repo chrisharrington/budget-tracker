@@ -8,15 +8,14 @@ export default class TagRoute {
         app.get('/tags/recent', this.getRecentTags.bind(this));
     }
 
-    private static async getRecentTags(_: Request, response: Response) {
+    private static async getRecentTags(request: Request, response: Response) {
         try {
-            console.log('Request received: GET /tags/recent');
+            request.log.info('Request received: GET /tags/recent');
 
             const tags = await TagService.getRecent();
             response.status(200).send(tags);
         } catch (e) {
-            console.log('Request failed: GET /tags/recent');
-            console.error(e);
+            request.log.error({ err: e }, 'Request failed: GET /tags/recent');
             response.status(500).send(e);
         }
     }

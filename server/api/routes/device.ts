@@ -10,14 +10,13 @@ export default class DeviceRoute {
 
     private static async upsertDevice(request: Request, response: Response) {
         try {
-            console.log('Request received: POST /device');
+            request.log.info('Request received: POST /device');
             await DeviceService.upsert(Device.fromRaw(request.body));
-            console.log(`Registered device with token ${request.body.token}`);
+            request.log.info(`Registered device with token ${request.body.token}`);
 
             response.sendStatus(200);
         } catch (e) {
-            console.log('Request failed: POST /device');
-            console.error(e);
+            request.log.error({ err: e }, 'Request failed: POST /device');
             response.status(500).send(e);
         }
     }
