@@ -1,10 +1,22 @@
-import { Base } from './base';
+import { Base } from '@lib/data/base';
 
 import TransactionService from '@lib/data/transaction';
 import logger from '@lib/logger';
-import { OneTime, Transaction } from '@lib/models';
+import { OneTime, Tag, Transaction } from '@lib/models';
 
 const ONE_TIME_TAG = 'one-time';
+
+// Signed amount to apply to the one-time balance for a transaction's tag transition: spend from the
+// pool when the one-time tag is newly added, refund it when removed, otherwise no change. Two
+// independent `.some()` checks — keeping the `&&` between them, not inside a callback.
+export function oneTimeBalanceDelta(oldTags: Tag[], newTags: Tag[], amount: number): number {
+    const hadOneTime = oldTags.some(tag => tag.name === ONE_TIME_TAG);
+    const hasOneTime = newTags.some(tag => tag.name === ONE_TIME_TAG);
+
+    if (!hadOneTime && hasOneTime) return -amount;
+    if (hadOneTime && !hasOneTime) return amount;
+    return 0;
+}
 
 class OneTimeService extends Base<OneTime> {
     constructor() {
@@ -25,11 +37,8 @@ class OneTimeService extends Base<OneTime> {
         if (!oldTransaction)
             throw new Error(`Transaction not found: ${newTransaction._id}.`);
 
-        if (oldTransaction.tags.every(t => t.name !== ONE_TIME_TAG) && newTransaction.tags.some(t => t.name === ONE_TIME_TAG))
-            oneTime.balance -= newTransaction.amount;
-        else if (oldTransaction.tags.some(t => t.name === ONE_TIME_TAG && newTransaction.tags.every(t => t.name !== ONE_TIME_TAG)))
-            oneTime.balance += newTransaction.amount;
-        
+        oneTime.balance += oneTimeBalanceDelta(oldTransaction.tags, newTransaction.tags, newTransaction.amount);
+
         await this.updateOne(oneTime);
     }
 
