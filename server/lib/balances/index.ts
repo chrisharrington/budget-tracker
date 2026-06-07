@@ -2,12 +2,12 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { CronJob } from 'cron';
-import { Balance, Tag, Transaction } from '@lib/models';
+import { Tag, Transaction } from '@lib/models';
 import TransactionService from '@lib/data/transaction';
 import BalanceService from '@lib/data/balance';
 import OneTimeService from '@lib/data/one-time';
 import logger from '@lib/logger';
-import Config from './config';
+import Config from '@lib/config';
 
 const log = logger.child({ module: 'balances' });
 
@@ -45,38 +45,31 @@ export async function upsertBalanceFromPreviousWeek(force: boolean = false) {
 
     const startOfPreviousWeek = dayjs().tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week').toDate();
     log.info('Previous week start date is ' + startOfPreviousWeek);
-    let balance = await BalanceService.findOne({ weekOf: startOfPreviousWeek });
-    if (balance && !force) {
+
+    const existing = await BalanceService.findOne({ weekOf: startOfPreviousWeek });
+    if (existing && !force) {
         log.info('Balance found. Skipping.');
         return;
     }
-        
-    const transactions = await TransactionService.getForWeek(startOfPreviousWeek),
-        isUpdate = !!balance;
+
+    const transactions = await TransactionService.getForWeek(startOfPreviousWeek);
 
     let sum = transactions
         .filter((transaction: Transaction) => !transaction.ignored && transaction.tags.every((tag: Tag) => !tag.ignore))
         .map((transaction: Transaction) => transaction.amount)
         .reduce((sum: number, curr: number) => sum + curr, 0);
 
+    // Exact match on the prior week's start date (the unique weekOf index guarantees a single doc),
+    // replacing the midnight-straddling range that was hedging against drift.
     const lastWeeksBalance = await BalanceService.findOne({
-        weekOf: {
-            $gt: dayjs(startOfPreviousWeek).subtract(1, 'week').subtract(1, 'day').toDate(),
-            $lt: dayjs(startOfPreviousWeek).subtract(1, 'week').add(1, 'day').toDate()
-        }
+        weekOf: dayjs(startOfPreviousWeek).subtract(1, 'week').toDate()
     });
 
     if (lastWeeksBalance)
         sum -= lastWeeksBalance.amount;
 
-    if (!balance) {
-        balance = new Balance();
-        balance.weekOf = startOfPreviousWeek;
-        balance = await BalanceService.insertOne(balance);
-    }
+    const amount = Config.weeklyAmount(startOfPreviousWeek) - sum;
+    await BalanceService.upsertForWeek(startOfPreviousWeek, amount);
 
-    balance.amount = Config.weeklyAmount(startOfPreviousWeek) - sum;
-    await BalanceService.updateOne(balance);
-
-    log.info(`${isUpdate ? 'Updated' : 'Inserted'} remaining balance with amount ${balance.amount.toFixed(2)}.`)
+    log.info(`${existing ? 'Updated' : 'Inserted'} remaining balance with amount ${amount.toFixed(2)}.`);
 }
