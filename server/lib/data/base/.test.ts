@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoClient } from 'mongodb';
 
 import Config from '@lib/config';
 
@@ -69,5 +70,28 @@ describe('Base', () => {
 
         const remaining = await widgets.find({ name: 'removable' });
         expect(remaining.length).toBe(0);
+    });
+
+    test('writes to the database named by Config.mongoDb', async () => {
+        const original = Config.mongoDb;
+        Config.mongoDb = 'mongo_db_honored';
+
+        try {
+            await widgets.insertOne({ name: 'configured-db', value: 99 } as Widget);
+
+            // Read directly from the configured database name; a hard-coded 'budget' would miss this.
+            const client = await new Promise<MongoClient>((resolve, reject) => {
+                MongoClient.connect(mongod.getUri(), { useUnifiedTopology: true }, (error, c) => error ? reject(error) : resolve(c));
+            });
+
+            try {
+                const doc = await client.db('mongo_db_honored').collection('widgets').findOne({ name: 'configured-db' });
+                expect(doc?.value).toBe(99);
+            } finally {
+                await client.close();
+            }
+        } finally {
+            Config.mongoDb = original;
+        }
     });
 });

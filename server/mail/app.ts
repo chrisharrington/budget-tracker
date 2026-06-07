@@ -14,11 +14,12 @@ import Notifications from './notifications';
 dayjs.extend(timezone);
 dayjs.extend(utc);
 
+// Fail loud before doing any work — a missing credential should crash the process at startup, not
+// leave it running idle. Kept outside the IIFE's try/catch so the throw exits non-zero.
+Config.assertMailConfig();
+
 (async () => {
     try {
-        if (!Config.mailHost || !Config.mailEmailAddress || !Config.mailPassword)
-            console.warn('[mail] Missing IMAP credentials - set MAIL_HOST, MAIL_USER, and MAIL_PASSWORD. The listener will not be able to connect.');
-
         const inbox = new Inbox(Config.mailHost, Config.mailEmailAddress, Config.mailPassword);
 
         inbox.onMessage(async (message: string, date: Date) => {

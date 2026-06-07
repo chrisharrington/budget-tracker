@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { afterEach, describe, expect, test } from 'bun:test';
 
 import Config from '.';
 
@@ -40,5 +40,57 @@ describe('Config.oneTimeAmount', () => {
 
     test('returns 1500 before 2024-12-15', () => {
         expect(Config.oneTimeAmount(new Date(2024, 11, 14))).toBe(1500);
+    });
+});
+
+describe('Config.mongoDb', () => {
+    test('defaults to budget when MONGO_DB is unset', () => {
+        // MONGO_DB is not set in the test environment, so the static falls back to the default.
+        expect(Config.mongoDb).toBe('budget');
+    });
+});
+
+describe('Config.apiKey', () => {
+    test('is undefined when API_KEY is unset (no default)', () => {
+        // Unlike mongoDb, apiKey has no fallback — a missing key reads as undefined, never ''.
+        expect(Config.apiKey).toBeUndefined();
+    });
+});
+
+describe('Config.assertMailConfig', () => {
+    const original = {
+        host: Config.mailHost,
+        user: Config.mailEmailAddress,
+        password: Config.mailPassword
+    };
+
+    afterEach(() => {
+        Config.mailHost = original.host;
+        Config.mailEmailAddress = original.user;
+        Config.mailPassword = original.password;
+    });
+
+    test('throws naming every missing mail variable', () => {
+        Config.mailHost = '';
+        Config.mailEmailAddress = '';
+        Config.mailPassword = '';
+
+        expect(() => Config.assertMailConfig()).toThrow('MAIL_HOST, MAIL_USER, MAIL_PASSWORD');
+    });
+
+    test('throws naming only the missing variable', () => {
+        Config.mailHost = 'imap.example.com';
+        Config.mailEmailAddress = 'inbox@example.com';
+        Config.mailPassword = '';
+
+        expect(() => Config.assertMailConfig()).toThrow('MAIL_PASSWORD');
+    });
+
+    test('does not throw when every mail variable is set', () => {
+        Config.mailHost = 'imap.example.com';
+        Config.mailEmailAddress = 'inbox@example.com';
+        Config.mailPassword = 'secret';
+
+        expect(() => Config.assertMailConfig()).not.toThrow();
     });
 });

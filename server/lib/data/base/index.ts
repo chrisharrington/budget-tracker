@@ -19,7 +19,7 @@ export class Base<TModel> {
         return new Promise<Collection>((resolve, reject) => {
             MongoClient.connect(this.connectionString, { useUnifiedTopology:true }, (error, client) => {
                 if (error) reject(error);
-                else resolve(client.db('budget').collection(collection || this.collection));
+                else resolve(client.db(Config.mongoDb).collection(collection || this.collection));
             });
         });
     }
