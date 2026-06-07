@@ -4,11 +4,11 @@ import { MongoClient } from 'mongodb';
 
 import Config from '@lib/config';
 
-import { Base } from '.';
+import { Base, closeDatabase } from '.';
 
 // Integration coverage for the data layer: boot a real ephemeral mongod and drive reads/writes
 // through the actual `Base` class (no mocking of the data layer). The only boundary we swap is the
-// connection string, which `Base` reads from `Config` at construction time.
+// connection string, which the shared pooled client reads from `Config` on first use.
 
 interface Widget {
     _id: string;
@@ -26,6 +26,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+    await closeDatabase();
     await mongod.stop();
 });
 
@@ -80,9 +81,7 @@ describe('Base', () => {
             await widgets.insertOne({ name: 'configured-db', value: 99 } as Widget);
 
             // Read directly from the configured database name; a hard-coded 'budget' would miss this.
-            const client = await new Promise<MongoClient>((resolve, reject) => {
-                MongoClient.connect(mongod.getUri(), { useUnifiedTopology: true }, (error, c) => error ? reject(error) : resolve(c));
-            });
+            const client = await MongoClient.connect(mongod.getUri());
 
             try {
                 const doc = await client.db('mongo_db_honored').collection('widgets').findOne({ name: 'configured-db' });
@@ -93,5 +92,14 @@ describe('Base', () => {
         } finally {
             Config.mongoDb = original;
         }
+    });
+
+    test('closeDatabase closes the pooled client and the next call reconnects', async () => {
+        await widgets.insertOne({ name: 'preclose', value: 1 } as Widget);
+
+        await closeDatabase();
+
+        const found = await widgets.findOne({ name: 'preclose' });
+        expect(found?.value).toBe(1);
     });
 });

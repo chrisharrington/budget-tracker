@@ -25,15 +25,9 @@ class BalanceService extends Base<Balance> {
 
     // Atomically create-or-update the balance for a week. With the unique weekOf index and an equality
     // filter, concurrent callers converge on a single document instead of racing insert/insert.
-    async upsertForWeek(weekOf: Date, amount: number): Promise<Balance> {
+    async upsertForWeek(weekOf: Date, amount: number): Promise<void> {
         const collection = await this.connect();
-        const result = await collection.findOneAndUpdate(
-            { weekOf },
-            { $set: { amount } },
-            { upsert: true, returnDocument: 'after' }
-        );
-
-        return result.value as Balance;
+        await collection.updateOne({ weekOf }, { $set: { amount } }, { upsert: true });
     }
 }
 

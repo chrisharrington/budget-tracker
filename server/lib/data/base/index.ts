@@ -1,112 +1,98 @@
-import { Collection, MongoClient, ObjectID, ObjectId } from 'mongodb';
+import { Collection, MongoClient, ObjectId, OptionalUnlessRequiredId } from 'mongodb';
 
 import Config from '@lib/config';
 import { Id } from '@lib/models';
 
+// A single shared, pooled MongoClient reused across every data service. Created lazily on first use
+// (memoized) so it reads Config after startup/tests have set it and never connects during a
+// pure-logic import. The driver maintains its own connection pool internally.
+let clientPromise: Promise<MongoClient> | undefined;
+
+function getClient(): Promise<MongoClient> {
+    if (!clientPromise)
+        clientPromise = MongoClient.connect(Config.databaseConnectionString);
+
+    return clientPromise;
+}
+
+// Close the shared client (used by graceful shutdown; the signal wiring lives in a separate ticket).
+// Safe to call when never connected, and a later operation transparently reconnects.
+export async function closeDatabase(): Promise<void> {
+    if (!clientPromise)
+        return;
+
+    const client = await clientPromise;
+    clientPromise = undefined;
+    await client.close();
+}
+
 export class Base<TModel> {
-    private connectionString: string;
     private collection: string;
 
-    constructor(collection: string, index?: any) {
-        this.connectionString = Config.databaseConnectionString;
+    constructor(collection: string, index?: Parameters<Collection['createIndex']>[0]) {
         this.collection = collection;
 
         if (index)
-            this.connect().then(c => c.createIndex(index));
+            this.connect().then(c => c.createIndex(index)).catch(() => { /* index creation is best-effort */ });
     }
 
     protected async connect(collection?: string) : Promise<Collection> {
-        return new Promise<Collection>((resolve, reject) => {
-            MongoClient.connect(this.connectionString, { useUnifiedTopology:true }, (error, client) => {
-                if (error) reject(error);
-                else resolve(client.db(Config.mongoDb).collection(collection || this.collection));
-            });
-        });
+        const client = await getClient();
+        return client.db(Config.mongoDb).collection(collection || this.collection);
     }
 
     public async findById(id: string) : Promise<TModel | null> {
-        return await this.findOne({ _id: new ObjectID(id) });
+        return await this.findOne({ _id: new ObjectId(id) });
     }
 
     public async findOne(query: any, sort?: any) : Promise<TModel | null> {
-        let result = await this.find(query, sort);
-        return result[0];
+        const result = await this.find(query, sort);
+        return result[0] ?? null;
     }
 
     public async find(query: any, sort?: any, limit?: number) : Promise<TModel[]> {
-        let collection = await this.connect();
+        const collection = await this.connect();
 
-        return new Promise<TModel[]>((resolve, reject) => {
-            let q = collection.find(query);
-            if (sort)
-                q = q.sort(sort);
-            if (limit)
-                q = q.limit(limit);
-            q.toArray((error, result) => {
-                if (error) reject(error);
-                else resolve(result);
-            });
-        });
+        let cursor = collection.find(query);
+        if (sort)
+            cursor = cursor.sort(sort);
+        if (limit)
+            cursor = cursor.limit(limit);
+
+        return await cursor.toArray() as TModel[];
     }
 
     public async search(query: string) : Promise<TModel[]> {
-        let collection = await this.connect();
+        const collection = await this.connect();
 
-        return new Promise<TModel[]>((resolve, reject) => {
-            collection.find({ $text: { $search: query } })
-                .project({ score: { $meta: 'textScore' } })
-                .sort({ score: { $meta: 'textScore' } })
-                .toArray((error, result) => {
-                    if (error) reject(error);
-                    else resolve(result);
-                });
-        });
+        return await collection.find({ $text: { $search: query } })
+            .project({ score: { $meta: 'textScore' } })
+            .sort({ score: { $meta: 'textScore' } })
+            .toArray() as TModel[];
     }
 
     public async insertOne(model: TModel) : Promise<TModel> {
-        let collection = await this.connect();
+        const collection = await this.connect();
 
-        return new Promise<TModel>((resolve, reject) => {
-            collection.insertOne(model, (error, response) => {
-                if (error) reject(error);
-                else {
-                    (model as any)._id = new ObjectId(response.insertedId);
-                    resolve(model);
-                }
-            });
-        });
+        const result = await collection.insertOne(model as OptionalUnlessRequiredId<TModel>);
+        (model as any)._id = result.insertedId;
+        return model;
     }
 
     public async updateOne(model: Id) : Promise<void> {
-        let collection = await this.connect();
+        const collection = await this.connect();
 
-        return new Promise<void>((resolve, reject) => {
-            const update: { [key: string]: unknown } = {};
-            Object.keys(model).forEach(key => {
-                if (key !== '_id')
-                    update[key] = (model as unknown as { [key: string]: unknown })[key];
-            });
-            collection.updateOne({
-                _id: new ObjectID(model._id)
-            }, {
-                $set: update
-            }, (error) => {
-                if (error) reject(error);
-                else resolve();
-            })
-        });
+        const update: { [key: string]: unknown } = {};
+        for (const [key, value] of Object.entries(model)) {
+            if (key !== '_id')
+                update[key] = value;
+        }
+
+        await collection.updateOne({ _id: new ObjectId(model._id) }, { $set: update });
     }
 
     public async remove(model: Id) : Promise<void> {
-        let collection = await this.connect();
-
-        return new Promise<void>((resolve, reject) => {
-            collection.deleteOne({
-                _id: new ObjectID(model._id)
-            }, (error) => {
-                if (error) reject(error);
-                else resolve();
-            });
-        });
+        const collection = await this.connect();
+        await collection.deleteOne({ _id: new ObjectId(model._id) });
     }
 }
