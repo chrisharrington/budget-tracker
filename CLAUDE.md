@@ -53,10 +53,11 @@ All config is env-driven (see `.env.example` for the authoritative list — copy
 | Variable | Purpose |
 |---|---|
 | `COMPOSE_PROJECT_NAME` | Namespaces containers/networks/per-stack volumes (`budget-tracker`). |
-| `MONGO_URI` | Mongo connection string (default `mongodb://database:27017`; DB name `budget` is hardcoded in `server/lib/data/base.ts`). |
-| `MONGO_DB` | Logical DB name (informational while auth-less). |
+| `MONGO_URI` | Mongo connection string (default `mongodb://database:27017`). |
+| `MONGO_DB` | Logical DB name selecting the Mongo database (default `budget`; read via `Config.mongoDb` in `server/lib/data/base/index.ts`). |
 | `NODE_ENV`, `API_PORT` | API runtime + published host port. |
-| `MAIL_HOST`, `MAIL_USER`, `MAIL_PASSWORD` | IMAP mailbox credentials (consumed by `mail`). |
+| `API_KEY` | Shared secret for API auth; the app sends it as a Bearer token (server-side enforcement forthcoming — see the BTAPI/BTAPP enforcement tickets). |
+| `MAIL_HOST`, `MAIL_USER`, `MAIL_PASSWORD` | IMAP mailbox credentials (consumed by `mail`; the `mail` process fails loud at startup if any are missing). |
 | `EXPO_ACCESS_TOKEN` | Server-side Expo push auth. |
 | `DEV_USER`, `DEV_UID`, `DEV_GID` | Dev-container UID/GID alignment with the host. |
 | `PRIMARY_GIT_DIR` | Absolute host path to the primary checkout's `.git` (worktree git resolution). |

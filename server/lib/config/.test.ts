@@ -50,6 +50,13 @@ describe('Config.mongoDb', () => {
     });
 });
 
+describe('Config.apiKey', () => {
+    test('is undefined when API_KEY is unset (no default)', () => {
+        // Unlike mongoDb, apiKey has no fallback — a missing key reads as undefined, never ''.
+        expect(Config.apiKey).toBeUndefined();
+    });
+});
+
 describe('Config.assertMailConfig', () => {
     const original = {
         host: Config.mailHost,
