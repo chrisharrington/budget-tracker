@@ -1,9 +1,17 @@
 import { Application, Request, Response, text } from 'express';
+import { rateLimit } from 'express-rate-limit';
 import { Logger } from 'pino';
 
 import logger from '@lib/logger';
 
 const VALID_LEVELS = new Set(['fatal', 'error', 'warn', 'info', 'debug', 'trace']);
+
+// Per-IP cap for the unauthenticated /log endpoint so it can't be spammed.
+export const LOG_RATE_LIMIT_PER_MINUTE = 60;
+
+export function createLogRateLimiter(limit: number = LOG_RATE_LIMIT_PER_MINUTE) {
+    return rateLimit({ windowMs: 60 * 1000, limit, standardHeaders: 'draft-7', legacyHeaders: false });
+}
 
 export interface ClientLogEntry {
     level: string;
@@ -49,7 +57,7 @@ export function recordClientLog(raw: string, log: Logger = logger): void {
 
 export default class Log {
     static initialize(app: Application) {
-        app.post('/log', text({ type: '*/*' }), this.log.bind(this));
+        app.post('/log', createLogRateLimiter(), text({ type: '*/*' }), this.log.bind(this));
 
         app.get('/test', (_: Request, response: Response) => response.send('Log service is running!').status(200));
     }
