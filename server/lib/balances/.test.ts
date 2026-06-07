@@ -3,12 +3,13 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import { MongoClient } from 'mongodb';
 import dayjs from 'dayjs';
 
-// The data-layer service singletons capture their connection string at construction, so the modules
-// are dynamically imported in beforeAll AFTER pointing Config at the in-memory Mongo.
+// Modules are imported in beforeAll AFTER pointing Config at the in-memory Mongo, so the shared
+// pooled client reads the right connection string on first use.
 let mongod: MongoMemoryServer;
 let Config: typeof import('@lib/config').default;
 let BalanceService: typeof import('@lib/data/balance').default;
 let upsertBalanceFromPreviousWeek: typeof import('@lib/balances').upsertBalanceFromPreviousWeek;
+let closeDatabase: typeof import('@lib/data/base').closeDatabase;
 
 beforeAll(async () => {
     mongod = await MongoMemoryServer.create();
@@ -16,19 +17,19 @@ beforeAll(async () => {
     Config.databaseConnectionString = mongod.getUri();
     BalanceService = (await import('@lib/data/balance')).default;
     ({ upsertBalanceFromPreviousWeek } = await import('@lib/balances'));
+    ({ closeDatabase } = await import('@lib/data/base'));
 
     // The unique index is what forces concurrent upserts to converge on one document.
     await BalanceService.ensureWeekOfIndex();
 });
 
 afterAll(async () => {
+    await closeDatabase();
     await mongod.stop();
 });
 
 beforeEach(async () => {
-    const client = await new Promise<MongoClient>((resolve, reject) => {
-        MongoClient.connect(mongod.getUri(), { useUnifiedTopology: true }, (error, c) => error ? reject(error) : resolve(c));
-    });
+    const client = await MongoClient.connect(mongod.getUri());
 
     try {
         await client.db(Config.mongoDb).collection('balances').deleteMany({});
