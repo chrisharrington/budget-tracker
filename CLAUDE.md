@@ -141,7 +141,6 @@ The `budget-tracker-gradle` / `budget-tracker-android` volumes are shared across
 
 - **Monday midnight** — Calculate and snapshot end-of-week balance, carry surplus/deficit into next week
 - **1st of month** — Increase one-time balance by configured amount
-- **Friday** — Allowance updates
 
 ## Key Files
 

@@ -20,7 +20,6 @@ export interface Transaction extends Id {
     owner: string;
     ignored: boolean;
     tags: Tag[];
-    isAllowancePayment?: boolean;
 }
 
 export interface Tag extends Id {

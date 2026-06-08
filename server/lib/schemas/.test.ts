@@ -42,6 +42,11 @@ describe('transactionSchema', () => {
         const parsed = transactionSchema.parse({ ...validTransaction, balance: true });
         expect('balance' in parsed).toBe(false);
     });
+
+    test('strips the retired isAllowancePayment field', () => {
+        const parsed = transactionSchema.parse({ ...validTransaction, isAllowancePayment: true });
+        expect('isAllowancePayment' in parsed).toBe(false);
+    });
 });
 
 describe('tagSchema', () => {
