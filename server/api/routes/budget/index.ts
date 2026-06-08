@@ -8,18 +8,17 @@ import * as TransactionService from '@lib/data/transaction';
 import * as BalanceService from '@lib/data/balance';
 import * as OneTimeService from '@lib/data/one-time';
 import { Budget, Transaction } from '@lib/models';
-import { copyTransaction, parseTransaction } from '@lib/parse';
+import { copyTransaction } from '@lib/parse';
 import { upsertBalanceFromPreviousWeek } from '@lib/balances';
 import { asyncHandler } from '@api/async-handler';
+import { validate } from '@api/validate';
+import { monthlyTagQuerySchema, transactionSchema, transactionSplitSchema, weekQuerySchema } from '@lib/schemas';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 async function getBudgetForWeek(request: Request, response: Response) {
     request.log.info('Request received: GET /week');
-
-    if (!request.query || !request.query.date)
-        throw new Error('Missing date parameter in query string.');
 
     let current = dayjs.utc(request.query.date as string).tz('America/Edmonton').startOf('day');
     while (current.day() !== 1)
@@ -69,7 +68,7 @@ async function getHistory(request: Request, response: Response) {
 async function updateTransaction(request: Request, response: Response) {
     request.log.info('Request received: POST /transaction');
 
-    const transaction = parseTransaction(request.body);
+    const transaction = request.body as Transaction;
 
     const valid = await checkTransaction(transaction);
     if (!valid) {
@@ -88,7 +87,7 @@ async function updateTransaction(request: Request, response: Response) {
 async function splitTransaction(request: Request, response: Response) {
     request.log.info('Request received: POST /transaction/split');
 
-    const transaction = parseTransaction(request.body.transaction);
+    const { transaction, newAmount } = request.body as { transaction: Transaction; newAmount: number };
 
     const valid = await checkTransaction(transaction);
     if (!valid) {
@@ -97,8 +96,7 @@ async function splitTransaction(request: Request, response: Response) {
         return;
     }
 
-    const newAmount = request.body.newAmount,
-        copy = copyTransaction(transaction);
+    const copy = copyTransaction(transaction);
 
     transaction.amount -= newAmount;
     copy.amount = newAmount;
@@ -115,13 +113,6 @@ async function splitTransaction(request: Request, response: Response) {
 
 async function getSummedMonthlyAmountForTag(request: Request, response: Response) {
     request.log.info('Request received: GET /transaction/sum-monthly');
-
-    if (!request.query.start)
-        return response.status(400).send('Missing start date.');
-    if (!request.query.end)
-        return response.status(400).send('Missing end date.');
-    if (!request.query.tag)
-        return response.status(400).send('Missing tag.');
 
     const start = dayjs(request.query.start as string),
         end = dayjs(request.query.end as string),
@@ -171,10 +162,10 @@ async function updateBalance(transaction: Transaction) {
 
 const router = Router();
 
-router.get('/week', asyncHandler(getBudgetForWeek));
+router.get('/week', validate(weekQuerySchema, 'query'), asyncHandler(getBudgetForWeek));
 router.get('/history', asyncHandler(getHistory));
-router.get('/transaction/sum-monthly', asyncHandler(getSummedMonthlyAmountForTag));
-router.post('/transaction', asyncHandler(updateTransaction));
-router.post('/transaction/split', asyncHandler(splitTransaction));
+router.get('/transaction/sum-monthly', validate(monthlyTagQuerySchema, 'query'), asyncHandler(getSummedMonthlyAmountForTag));
+router.post('/transaction', validate(transactionSchema), asyncHandler(updateTransaction));
+router.post('/transaction/split', validate(transactionSplitSchema), asyncHandler(splitTransaction));
 
 export default router;

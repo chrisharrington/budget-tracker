@@ -21,23 +21,42 @@ function buildApp(): Express {
     return app;
 }
 
-describe('budget router error handling', () => {
-    test('responds 500 without leaking the internal error', async () => {
+describe('budget router request validation', () => {
+    // These all reject at the validate middleware (ZodError → errorHandler → 400) before any handler
+    // or DB work, so no Mongo is needed.
+    async function statusFor(path: string, init?: RequestInit): Promise<number> {
         const server = buildApp().listen(0);
         const { port } = server.address() as AddressInfo;
-
         try {
-            // No `date` query param → the handler throws `Missing date parameter…` → asyncHandler
-            // forwards it → errorHandler → sanitized 500. A DB-free, deterministic error path.
-            const response = await fetch(`http://127.0.0.1:${port}/week`);
-            const body = await response.text();
-
-            expect(response.status).toBe(500);
-            expect(body).toBe('Internal Server Error');
-            expect(body).not.toContain('date parameter');
+            const response = await fetch(`http://127.0.0.1:${port}${path}`, init);
+            return response.status;
         } finally {
             server.close();
         }
+    }
+
+    test('rejects GET /week without a date as 400', async () => {
+        expect(await statusFor('/week')).toBe(400);
+    });
+
+    test('rejects GET /week with an unparseable date as 400', async () => {
+        expect(await statusFor('/week?date=not-a-date')).toBe(400);
+    });
+
+    test('rejects POST /transaction without an amount as 400', async () => {
+        const status = await statusFor('/transaction', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                _id: 'abc',
+                date: '2026-06-01T00:00:00.000Z',
+                description: 'COFFEE',
+                owner: 'Chris',
+                ignored: false,
+                tags: []
+            })
+        });
+        expect(status).toBe(400);
     });
 });
 
