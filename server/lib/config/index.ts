@@ -43,6 +43,7 @@ export default class Config {
     static timezone: string = 'America/Edmonton';
     static remainingBalanceUpdateCron: string = '0 0 * * MON';
     static oneTimeBalanceUpdateCron: string = '0 0 1 * *';
+    static notificationReceiptCron: string = '*/15 * * * *';
     static allowanceUpdateCron: string = '0 0 * * FRI';
     static allowanceBaseWeeklyAmount: number = 5;
     static allowanceIncrement: number = 1;
