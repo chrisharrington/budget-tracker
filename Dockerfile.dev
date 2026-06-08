@@ -113,6 +113,15 @@ RUN install -d -o $DEV_UID -g $DEV_GID /app /app/server /app/app
 WORKDIR /app
 USER ${DEV_USER}
 
+# Claude Code CLI — installed via Anthropic's native installer so the binary
+# lands at ~/.local/bin/claude. The bind-mounted ~/.claude.json from the host
+# records `installMethod: native` and points the runtime at that path; an npm
+# global install at /usr/local/bin would work but trips the install-location
+# self-check on startup. Runs as DEV_USER (the active USER) so the install
+# tree is owned by them.
+ENV PATH="/home/${DEV_USER}/.local/bin:${PATH}"
+RUN curl -fsSL https://claude.ai/install.sh | bash
+
 # Install server/ and app/ dependencies into the image. The anonymous volumes
 # mounted at /app/server/node_modules and /app/app/node_modules in compose
 # initialize from these locations on first start, preserving the install under
