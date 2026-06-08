@@ -1,6 +1,6 @@
 import { Application, Request, Response } from 'express';
 
-import DeviceService from '@lib/data/device';
+import * as DeviceService from '@lib/data/device';
 import { parseDevice } from '@lib/parse';
 
 export default class DeviceRoute {

@@ -1,6 +1,6 @@
 import { Application, Request, Response } from 'express';
 
-import OneTimeService from '@lib/data/one-time';
+import * as OneTimeService from '@lib/data/one-time';
 
 
 export default class TagRoute {

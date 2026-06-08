@@ -1,10 +1,13 @@
-import { Base } from '@lib/data/base';
+import { ObjectId } from 'mongodb';
 
-import TransactionService from '@lib/data/transaction';
+import * as TransactionService from '@lib/data/transaction';
 import logger from '@lib/logger';
 import { OneTime, Tag, Transaction } from '@lib/models';
+import { collection } from '@lib/data/base';
 
 const ONE_TIME_TAG = 'one-time';
+
+const oneTimes = () => collection<OneTime>('one-time');
 
 // Signed amount to apply to the one-time balance for a transaction's tag transition: spend from the
 // pool when the one-time tag is newly added, refund it when removed, otherwise no change. Two
@@ -18,37 +21,38 @@ export function oneTimeBalanceDelta(oldTags: Tag[], newTags: Tag[], amount: numb
     return 0;
 }
 
-class OneTimeService extends Base<OneTime> {
-    constructor() {
-        super('one-time');
-    }
-
-    async get() : Promise<OneTime> {
-        const oneTime = await this.findOne({});
-        if (!oneTime)
-            throw new Error('No one-time balance record found.');
-        return oneTime;
-    }
-
-    async applyTransaction(newTransaction: Transaction) : Promise<void> {
-        const oldTransaction = await TransactionService.findById(newTransaction._id),
-            oneTime = await this.get();
-
-        if (!oldTransaction)
-            throw new Error(`Transaction not found: ${newTransaction._id}.`);
-
-        oneTime.balance += oneTimeBalanceDelta(oldTransaction.tags, newTransaction.tags, newTransaction.amount);
-
-        await this.updateOne(oneTime);
-    }
-
-    async addAmount(amount: number) : Promise<void> {
-        logger.info({ amount }, 'Adding one-time amount.');
-
-        const oneTime = await this.get();
-        oneTime.balance += amount;
-        await this.updateOne(oneTime);
-    }
+async function update(oneTime: OneTime): Promise<void> {
+    const collection = await oneTimes();
+    const { _id, ...rest } = oneTime;
+    // The model carries a string `_id`, but the stored documents key on ObjectId — cast the filter at
+    // this driver boundary (the same shape the old Base class used).
+    await collection.updateOne({ _id: new ObjectId(_id) } as object, { $set: rest });
 }
 
-export default new OneTimeService();
+export async function get(): Promise<OneTime> {
+    const collection = await oneTimes();
+    const oneTime = await collection.findOne({}) as OneTime | null;
+    if (!oneTime)
+        throw new Error('No one-time balance record found.');
+    return oneTime;
+}
+
+export async function applyTransaction(newTransaction: Transaction): Promise<void> {
+    const oldTransaction = await TransactionService.findById(newTransaction._id),
+        oneTime = await get();
+
+    if (!oldTransaction)
+        throw new Error(`Transaction not found: ${newTransaction._id}.`);
+
+    oneTime.balance += oneTimeBalanceDelta(oldTransaction.tags, newTransaction.tags, newTransaction.amount);
+
+    await update(oneTime);
+}
+
+export async function addAmount(amount: number): Promise<void> {
+    logger.info({ amount }, 'Adding one-time amount.');
+
+    const oneTime = await get();
+    oneTime.balance += amount;
+    await update(oneTime);
+}

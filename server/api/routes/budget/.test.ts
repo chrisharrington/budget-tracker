@@ -33,14 +33,14 @@ describe('BudgetRoute error handling', () => {
 describe('GET /history week bucketing', () => {
     let mongod: MongoMemoryServer;
     let Config: typeof import('@lib/config').default;
-    let TransactionService: typeof import('@lib/data/transaction').default;
+    let TransactionService: typeof import('@lib/data/transaction');
     let closeDatabase: typeof import('@lib/data/base').closeDatabase;
 
     beforeAll(async () => {
         mongod = await MongoMemoryServer.create();
         Config = (await import('@lib/config')).default;
         Config.databaseConnectionString = mongod.getUri();
-        TransactionService = (await import('@lib/data/transaction')).default;
+        TransactionService = await import('@lib/data/transaction');
         ({ closeDatabase } = await import('@lib/data/base'));
 
         const seed = async (description: string, iso: string, amount: number, ignored = false) => {

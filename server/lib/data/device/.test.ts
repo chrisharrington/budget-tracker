@@ -7,14 +7,14 @@ import { Device } from '@lib/models';
 // the connection string on first use).
 let mongod: MongoMemoryServer;
 let Config: typeof import('@lib/config').default;
-let DeviceService: typeof import('.').default;
+let DeviceService: typeof import('.');
 let closeDatabase: typeof import('@lib/data/base').closeDatabase;
 
 beforeAll(async () => {
     mongod = await MongoMemoryServer.create();
     Config = (await import('@lib/config')).default;
     Config.databaseConnectionString = mongod.getUri();
-    DeviceService = (await import('.')).default;
+    DeviceService = await import('.');
     ({ closeDatabase } = await import('@lib/data/base'));
 });
 
@@ -23,13 +23,21 @@ afterAll(async () => {
     await mongod.stop();
 });
 
-describe('DeviceService.upsert', () => {
-    test('registers a token without creating duplicates on repeat', async () => {
+describe('DeviceService', () => {
+    test('upsert registers a token without creating duplicates on repeat', async () => {
         await DeviceService.upsert({ token: 'expo-token-1' } as Device);
         await DeviceService.upsert({ token: 'expo-token-1' } as Device);
 
-        const devices = await DeviceService.find({});
+        const devices = await DeviceService.list();
         expect(devices.length).toBe(1);
         expect(devices[0].token).toBe('expo-token-1');
+    });
+
+    test('list returns every registered device', async () => {
+        await DeviceService.upsert({ token: 'expo-token-2' } as Device);
+
+        const tokens = (await DeviceService.list()).map(device => device.token);
+        expect(tokens).toContain('expo-token-1');
+        expect(tokens).toContain('expo-token-2');
     });
 });
