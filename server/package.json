@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "An API providing details regarding remaining weekly budget.",
   "main": "index.js",
-  "repository": "git@github.com:chrisharrington/budget-tracker-api.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chrisharrington/budget-tracker.git",
+    "directory": "server"
+  },
   "author": "Chris Harrington <chrisharrington99@gmail.com>",
   "license": "MIT",
   "scripts": {
