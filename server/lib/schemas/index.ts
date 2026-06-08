@@ -20,8 +20,7 @@ export const transactionSchema = z.object({
     description: z.string(),
     owner: z.string(),
     ignored: z.boolean().default(false),
-    tags: z.array(tagSchema).default([]),
-    isAllowancePayment: z.boolean().optional()
+    tags: z.array(tagSchema).default([])
 });
 
 export const transactionSplitSchema = z.object({
