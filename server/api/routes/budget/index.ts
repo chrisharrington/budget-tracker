@@ -7,6 +7,7 @@ import TransactionService from '@lib/data/transaction';
 import BalanceService from '@lib/data/balance';
 import OneTimeService from '@lib/data/one-time';
 import { Budget, Transaction } from '@lib/models';
+import { copyTransaction, parseTransaction } from '@lib/parse';
 import { upsertBalanceFromPreviousWeek } from '@lib/balances';
 
 import timeZonePlugin from 'dayjs-ext/plugin/timeZone';
@@ -40,12 +41,12 @@ export default class BudgetRoute {
 
             request.log.info('Weekly amount: ' + weeklyAmount);
 
-            response.status(200).send(new Budget({
+            response.status(200).send({
                 date,
                 balance: await this.getBalanceFromPreviousWeek(current),
                 weeklyAmount,
                 transactions
-            }));
+            } satisfies Budget);
         } catch (e) {
             request.log.error({ err: e }, 'Request failed: GET /week');
             response.sendStatus(500);
@@ -88,7 +89,7 @@ export default class BudgetRoute {
         try {
             request.log.info('Request received: POST /transaction');
 
-            const transaction = Transaction.fromRaw(request.body);
+            const transaction = parseTransaction(request.body);
 
             var valid = await this.checkTransaction(transaction);
             if (!valid) {
@@ -112,7 +113,7 @@ export default class BudgetRoute {
         try {
             request.log.info('Request received: POST /transaction/split');
 
-            const transaction = Transaction.fromRaw(request.body.transaction);
+            const transaction = parseTransaction(request.body.transaction);
 
             var valid = await this.checkTransaction(transaction);
             if (!valid) {
@@ -122,7 +123,7 @@ export default class BudgetRoute {
             }
 
             const newAmount = request.body.newAmount,
-                copy = Transaction.copy(transaction);
+                copy = copyTransaction(transaction);
 
             transaction.amount -= newAmount;
             copy.amount = newAmount;

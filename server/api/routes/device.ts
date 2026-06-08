@@ -1,7 +1,7 @@
 import { Application, Request, Response } from 'express';
 
 import DeviceService from '@lib/data/device';
-import { Device } from '@lib/models';
+import { parseDevice } from '@lib/parse';
 
 export default class DeviceRoute {
     static initialize(app: Application) {
@@ -11,7 +11,7 @@ export default class DeviceRoute {
     private static async upsertDevice(request: Request, response: Response) {
         try {
             request.log.info('Request received: POST /device');
-            await DeviceService.upsert(Device.fromRaw(request.body));
+            await DeviceService.upsert(parseDevice(request.body));
             request.log.info(`Registered device with token ${request.body.token}`);
 
             response.sendStatus(200);

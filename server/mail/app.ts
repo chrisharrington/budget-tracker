@@ -6,11 +6,11 @@ import utc from 'dayjs/plugin/utc';
 
 import Config from '@lib/config';
 import logger from '@lib/logger';
-import { Transaction } from '@lib/models';
 import TransactionService from '@lib/data/transaction';
 
 import Inbox from './inbox';
 import Notifications from './notifications';
+import { parseMessage } from './parser';
 
 const log = logger.child({ module: 'mail' });
 
@@ -29,7 +29,7 @@ Config.assertMailConfig();
             try {
                 log.info('Message received.');
 
-                const transaction = Transaction.fromMessage(message, date);
+                const transaction = parseMessage(message, date);
                 log.info({ transaction }, 'Built transaction.');
 
                 const existingTransactions = await TransactionService.find({
