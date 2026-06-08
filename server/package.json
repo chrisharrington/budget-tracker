@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@types/express": "^4.17.21",
-    "body-parser": "^1.20.3",
     "cron": "^1.8.3",
     "dayjs": "^1.11.13",
     "expo-server-sdk": "^3.11.0",

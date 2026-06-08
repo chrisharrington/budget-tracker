@@ -1,52 +1,39 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
-import bodyParser from 'body-parser';
 import pinoHttp from 'pino-http';
+
 import Config from '@lib/config';
 import logger from '@lib/logger';
-import Budget from '@api/routes/budget';
-import Device from '@api/routes/device';
-import Tags from '@api/routes/tags';
-import OneTime from '@api/routes/one-time';
+import budgetRouter from '@api/routes/budget';
+import deviceRouter from '@api/routes/device';
+import tagsRouter from '@api/routes/tags';
+import oneTimeRouter from '@api/routes/one-time';
 import { startWeeklyRemainingBalanceJob, startMonthlyOneTimeBalanceIncreaseJob } from '@lib/balances';
-import { Transaction } from '@root/lib/models';
-import Log from './routes/log';
+import { errorHandler } from '@api/error-handler';
+import logRouter from './routes/log';
 
-class Server {
-    private port: number;
+const PORT = 9999;
 
-    constructor(port: number) {
-        this.port = port;
-    }
+async function start() {
+    const app = express();
 
-    async run() {
-        const app = express();
-        app.use(pinoHttp({ logger }));
-        app.use(cors({ origin: Config.corsOrigins }));
-        app.use(bodyParser.json());
+    app.use(pinoHttp({ logger }));
+    app.use(cors({ origin: Config.corsOrigins }));
+    app.use(express.json());
 
-        Budget.initialize(app);
-        Device.initialize(app);
-        Tags.initialize(app);
-        OneTime.initialize(app);
-        Log.initialize(app);
+    app.use('/', budgetRouter);
+    app.use('/', deviceRouter);
+    app.use('/', tagsRouter);
+    app.use('/', oneTimeRouter);
+    app.use('/', logRouter);
 
-        startWeeklyRemainingBalanceJob();
-        startMonthlyOneTimeBalanceIncreaseJob();
+    startWeeklyRemainingBalanceJob();
+    startMonthlyOneTimeBalanceIncreaseJob();
 
-        // await OneTimeService.addAmount(2364);
+    // Registered last so it catches errors forwarded from any route handler.
+    app.use(errorHandler);
 
-        // await TransactionService.insertOne({
-        //     amount: -974.06,
-        //     date: new Date(),
-        //     description: 'Reset',
-        //     owner: 'Chris',
-        //     tags: [],
-        //     ignored: false
-        // } as Transaction);
-
-        app.listen(this.port, '0.0.0.0', () => logger.info(`Listening on port ${this.port}...`));
-    }
+    app.listen(PORT, '0.0.0.0', () => logger.info(`Listening on port ${PORT}...`));
 }
 
-new Server(9999).run();
+start();

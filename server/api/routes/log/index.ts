@@ -1,8 +1,9 @@
-import { Application, Request, Response, text } from 'express';
+import { Request, Response, Router, text } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { Logger } from 'pino';
 
 import logger from '@lib/logger';
+import { asyncHandler } from '@api/async-handler';
 
 const VALID_LEVELS = new Set(['fatal', 'error', 'warn', 'info', 'debug', 'trace']);
 
@@ -55,16 +56,15 @@ export function recordClientLog(raw: string, log: Logger = logger): void {
     }
 }
 
-export default class Log {
-    static initialize(app: Application) {
-        app.post('/log', createLogRateLimiter(), text({ type: '*/*' }), this.log.bind(this));
-
-        app.get('/test', (_: Request, response: Response) => response.send('Log service is running!').status(200));
-    }
-
-    private static async log(request: Request, response: Response) {
-        const raw = typeof request.body === 'string' ? request.body : JSON.stringify(request.body);
-        recordClientLog(raw);
-        response.sendStatus(200);
-    }
+async function log(request: Request, response: Response) {
+    const raw = typeof request.body === 'string' ? request.body : JSON.stringify(request.body);
+    recordClientLog(raw);
+    response.sendStatus(200);
 }
+
+const router = Router();
+
+router.post('/log', createLogRateLimiter(), text({ type: '*/*' }), asyncHandler(log));
+router.get('/test', (_: Request, response: Response) => response.status(200).send('Log service is running!'));
+
+export default router;
