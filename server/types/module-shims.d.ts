@@ -16,17 +16,6 @@ declare module 'cron' {
     }
 }
 
-declare module 'get-timezone-offset' {
-    // Returns the offset, in minutes, of the given IANA time zone for an optional date.
-    export default function getTimezoneOffset(timeZone: string, date?: Date): number;
-}
-
-declare module 'dayjs-ext/plugin/timeZone' {
-    import { PluginFunc } from 'dayjs';
-    const plugin: PluginFunc;
-    export default plugin;
-}
-
 declare module 'mailparser-mit' {
     import { Writable } from 'stream';
 
