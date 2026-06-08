@@ -1,4 +1,3 @@
-import 'module-alias/register';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
