@@ -5,8 +5,8 @@ import timezone from 'dayjs/plugin/timezone';
 
 import Config from '@lib/config';
 import TransactionService from '@lib/data/transaction';
-import BalanceService from '@lib/data/balance';
-import OneTimeService from '@lib/data/one-time';
+import * as BalanceService from '@lib/data/balance';
+import * as OneTimeService from '@lib/data/one-time';
 import { Budget, Transaction } from '@lib/models';
 import { copyTransaction, parseTransaction } from '@lib/parse';
 import { upsertBalanceFromPreviousWeek } from '@lib/balances';
@@ -184,7 +184,7 @@ export default class BudgetRoute {
 
     private static async getBalanceFromPreviousWeek(date: dayjs.Dayjs) {
         const startOfPreviousWeek = dayjs(date).tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week').toDate();
-        const balance = await BalanceService.findOne({ weekOf: startOfPreviousWeek });
+        const balance = await BalanceService.findForWeek(startOfPreviousWeek);
         return balance?.amount;
     }
 

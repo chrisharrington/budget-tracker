@@ -4,8 +4,8 @@ import timezone from 'dayjs/plugin/timezone';
 import { CronJob } from 'cron';
 import { Tag, Transaction } from '@lib/models';
 import TransactionService from '@lib/data/transaction';
-import BalanceService from '@lib/data/balance';
-import OneTimeService from '@lib/data/one-time';
+import * as BalanceService from '@lib/data/balance';
+import * as OneTimeService from '@lib/data/one-time';
 import logger from '@lib/logger';
 import Config from '@lib/config';
 
@@ -16,11 +16,7 @@ dayjs.extend(timezone);
 
 export function startMonthlyOneTimeBalanceIncreaseJob() {
     const job = new CronJob(Config.oneTimeBalanceUpdateCron, async () => {
-        const oneTime = await OneTimeService.get();
-        oneTime.balance += Config.oneTimeAmount();
-        await OneTimeService.updateOne(oneTime);
-
-        log.info(`Updated one-time balance to ${oneTime.balance}.`);
+        await OneTimeService.addAmount(Config.oneTimeAmount());
     }, null, true, Config.timezone);
 
     job.start();
@@ -46,7 +42,7 @@ export async function upsertBalanceFromPreviousWeek(force: boolean = false) {
     const startOfPreviousWeek = dayjs().tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week').toDate();
     log.info('Previous week start date is ' + startOfPreviousWeek);
 
-    const existing = await BalanceService.findOne({ weekOf: startOfPreviousWeek });
+    const existing = await BalanceService.findForWeek(startOfPreviousWeek);
     if (existing && !force) {
         log.info('Balance found. Skipping.');
         return;
@@ -61,9 +57,9 @@ export async function upsertBalanceFromPreviousWeek(force: boolean = false) {
 
     // Exact match on the prior week's start date (the unique weekOf index guarantees a single doc),
     // replacing the midnight-straddling range that was hedging against drift.
-    const lastWeeksBalance = await BalanceService.findOne({
-        weekOf: dayjs(startOfPreviousWeek).subtract(1, 'week').toDate()
-    });
+    const lastWeeksBalance = await BalanceService.findForWeek(
+        dayjs(startOfPreviousWeek).subtract(1, 'week').toDate()
+    );
 
     if (lastWeeksBalance)
         sum -= lastWeeksBalance.amount;
