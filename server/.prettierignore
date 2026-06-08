@@ -1,0 +1,8 @@
+node_modules
+bun.lock
+**/*.js
+**/*.js.map
+mail/sample.txt
+mail/__fixtures__/
+LICENSE
+Dockerfile
