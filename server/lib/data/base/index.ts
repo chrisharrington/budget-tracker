@@ -1,4 +1,4 @@
-import { Collection, MongoClient, ObjectId, OptionalUnlessRequiredId } from 'mongodb';
+import { Collection, Document, MongoClient, ObjectId, OptionalUnlessRequiredId } from 'mongodb';
 
 import Config from '@lib/config';
 import { Id } from '@lib/models';
@@ -24,6 +24,14 @@ export async function closeDatabase(): Promise<void> {
     const client = await clientPromise;
     clientPromise = undefined;
     await client.close();
+}
+
+// Typed accessor for a collection on the shared pooled client. Replaces the Base class as the single
+// shared data-layer primitive — services are plain function modules that call this and use the driver
+// API directly. The cast mirrors how Base treated documents (models carry a string `_id`).
+export async function collection<T extends Document>(name: string): Promise<Collection<T>> {
+    const client = await getClient();
+    return client.db(Config.mongoDb).collection(name) as unknown as Collection<T>;
 }
 
 export class Base<TModel> {

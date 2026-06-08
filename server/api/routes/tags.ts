@@ -1,6 +1,6 @@
 import { Application, Request, Response } from 'express';
 
-import TagService from '@lib/data/tags';
+import * as TagService from '@lib/data/tags';
 
 
 export default class TagRoute {
