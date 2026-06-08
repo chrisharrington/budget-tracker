@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 
-import TransactionService from '@lib/data/transaction';
+import * as TransactionService from '@lib/data/transaction';
 import logger from '@lib/logger';
 import { OneTime, Tag, Transaction } from '@lib/models';
 import { collection } from '@lib/data/base';

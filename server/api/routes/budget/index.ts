@@ -4,7 +4,7 @@ import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 
 import Config from '@lib/config';
-import TransactionService from '@lib/data/transaction';
+import * as TransactionService from '@lib/data/transaction';
 import * as BalanceService from '@lib/data/balance';
 import * as OneTimeService from '@lib/data/one-time';
 import { Budget, Transaction } from '@lib/models';

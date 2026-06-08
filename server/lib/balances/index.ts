@@ -3,7 +3,7 @@ import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { CronJob } from 'cron';
 import { Tag, Transaction } from '@lib/models';
-import TransactionService from '@lib/data/transaction';
+import * as TransactionService from '@lib/data/transaction';
 import * as BalanceService from '@lib/data/balance';
 import * as OneTimeService from '@lib/data/one-time';
 import logger from '@lib/logger';

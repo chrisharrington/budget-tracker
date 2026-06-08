@@ -4,10 +4,10 @@ import { MongoClient } from 'mongodb';
 
 import Config from '@lib/config';
 
-import { Base, closeDatabase } from '.';
+import { collection, closeDatabase } from '.';
 
-// Integration coverage for the data layer: boot a real ephemeral mongod and drive reads/writes
-// through the actual `Base` class (no mocking of the data layer). The only boundary we swap is the
+// Integration coverage for the shared data-layer primitive: boot a real ephemeral mongod and drive
+// reads/writes through the `collection<T>` helper (no mocking). The only boundary we swap is the
 // connection string, which the shared pooled client reads from `Config` on first use.
 
 interface Widget {
@@ -17,12 +17,10 @@ interface Widget {
 }
 
 let mongod!: MongoMemoryServer;
-let widgets!: Base<Widget>;
 
 beforeAll(async () => {
     mongod = await MongoMemoryServer.create();
     Config.databaseConnectionString = mongod.getUri();
-    widgets = new Base<Widget>('widgets');
 });
 
 afterAll(async () => {
@@ -30,59 +28,25 @@ afterAll(async () => {
     await mongod.stop();
 });
 
-describe('Base', () => {
-    test('persists a document and reads it back by query', async () => {
-        const inserted = await widgets.insertOne({ name: 'alpha', value: 1 } as Widget);
-        expect(inserted._id).toBeDefined();
+describe('collection', () => {
+    test('returns a working collection on the shared pooled client', async () => {
+        const widgets = await collection<Widget>('widgets');
+        await widgets.insertOne({ name: 'alpha', value: 1 } as Widget);
 
         const found = await widgets.findOne({ name: 'alpha' });
         expect(found?.value).toBe(1);
     });
 
-    test('finds a document by its generated id', async () => {
-        const inserted = await widgets.insertOne({ name: 'byid', value: 7 } as Widget);
-
-        const found = await widgets.findById(String(inserted._id));
-        expect(found?.value).toBe(7);
-    });
-
-    test('returns every document matching a query', async () => {
-        await widgets.insertOne({ name: 'shared', value: 10 } as Widget);
-        await widgets.insertOne({ name: 'shared', value: 20 } as Widget);
-
-        const found = await widgets.find({ name: 'shared' });
-        expect(found.map(w => w.value).sort((first, second) => first - second)).toEqual([10, 20]);
-    });
-
-    test('updates an existing document', async () => {
-        const inserted = await widgets.insertOne({ name: 'updatable', value: 1 } as Widget);
-
-        inserted.value = 42;
-        await widgets.updateOne(inserted);
-
-        const found = await widgets.findOne({ name: 'updatable' });
-        expect(found?.value).toBe(42);
-    });
-
-    test('removes a document', async () => {
-        const inserted = await widgets.insertOne({ name: 'removable', value: 5 } as Widget);
-
-        await widgets.remove(inserted);
-
-        const remaining = await widgets.find({ name: 'removable' });
-        expect(remaining.length).toBe(0);
-    });
-
-    test('writes to the database named by Config.mongoDb', async () => {
+    test('reads and writes the database named by Config.mongoDb', async () => {
         const original = Config.mongoDb;
         Config.mongoDb = 'mongo_db_honored';
 
         try {
+            const widgets = await collection<Widget>('widgets');
             await widgets.insertOne({ name: 'configured-db', value: 99 } as Widget);
 
             // Read directly from the configured database name; a hard-coded 'budget' would miss this.
             const client = await MongoClient.connect(mongod.getUri());
-
             try {
                 const doc = await client.db('mongo_db_honored').collection('widgets').findOne({ name: 'configured-db' });
                 expect(doc?.value).toBe(99);
@@ -95,11 +59,13 @@ describe('Base', () => {
     });
 
     test('closeDatabase closes the pooled client and the next call reconnects', async () => {
-        await widgets.insertOne({ name: 'preclose', value: 1 } as Widget);
+        const before = await collection<Widget>('widgets');
+        await before.insertOne({ name: 'preclose', value: 1 } as Widget);
 
         await closeDatabase();
 
-        const found = await widgets.findOne({ name: 'preclose' });
+        const after = await collection<Widget>('widgets');
+        const found = await after.findOne({ name: 'preclose' });
         expect(found?.value).toBe(1);
     });
 });

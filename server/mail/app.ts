@@ -4,7 +4,7 @@ import utc from 'dayjs/plugin/utc';
 
 import Config from '@lib/config';
 import logger from '@lib/logger';
-import TransactionService from '@lib/data/transaction';
+import * as TransactionService from '@lib/data/transaction';
 
 import Inbox from './inbox';
 import Notifications from './notifications';
