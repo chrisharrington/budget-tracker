@@ -53,7 +53,7 @@ Config.assertMailConfig();
 
         await inbox.parseUnread();
 
-        // Notifications.test('ExponentPushToken[I9JfuHAzhmz1wwQ6k_QEJp]');
+        Notifications.startReceiptAcquisitionJob();
 
         log.info('Listening for messages...');
     } catch (e) {

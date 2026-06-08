@@ -40,4 +40,19 @@ describe('DeviceService', () => {
         expect(tokens).toContain('expo-token-1');
         expect(tokens).toContain('expo-token-2');
     });
+
+    test('list excludes a device disabled via disableByToken', async () => {
+        await DeviceService.upsert({ token: 'expo-token-stale' } as Device);
+        await DeviceService.disableByToken('expo-token-stale');
+
+        const tokens = (await DeviceService.list()).map(device => device.token);
+        expect(tokens).not.toContain('expo-token-stale');
+    });
+
+    test('disableByToken on an unknown token is a harmless no-op', async () => {
+        await DeviceService.disableByToken('expo-token-never-registered');
+
+        const tokens = (await DeviceService.list()).map(device => device.token);
+        expect(tokens).toContain('expo-token-1');
+    });
 });
