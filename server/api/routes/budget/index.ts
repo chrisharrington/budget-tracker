@@ -1,6 +1,7 @@
 import { Application, Request, Response } from 'express';
 import dayjs from 'dayjs';
-import getTimezoneOffset from 'get-timezone-offset';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
 import Config from '@lib/config';
 import TransactionService from '@lib/data/transaction';
@@ -10,9 +11,8 @@ import { Budget, Transaction } from '@lib/models';
 import { copyTransaction, parseTransaction } from '@lib/parse';
 import { upsertBalanceFromPreviousWeek } from '@lib/balances';
 
-import timeZonePlugin from 'dayjs-ext/plugin/timeZone';
-
-dayjs.extend(timeZonePlugin);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export default class BudgetRoute {
     static initialize(app: Application) {
@@ -61,7 +61,7 @@ export default class BudgetRoute {
                 dict: { [weekLabel: string]: { balance: number } } = {};
 
             transactions.forEach((transaction: Transaction) => {
-                let week = dayjs(transaction.date).subtract(getTimezoneOffset('America/Edmonton'), 'minute').startOf('day');
+                let week = dayjs(transaction.date).tz(Config.timezone).startOf('day');
                 while (week.day() !== 1)
                     week = week.subtract(1, 'day');
 
