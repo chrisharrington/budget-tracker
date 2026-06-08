@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 
-import Config, { parseCorsOrigins } from '.';
+import Config, { parseCardOwnerMap, parseCorsOrigins } from '.';
 
 // Dates are built with `new Date(year, monthIndex, day)` (month is 0-indexed), matching how the
 // tier boundaries are declared in the subject, so comparisons are timezone-consistent.
@@ -79,6 +79,30 @@ describe('parseCorsOrigins', () => {
             'https://a.example.com',
             'https://b.example.com'
         ]);
+    });
+});
+
+describe('parseCardOwnerMap', () => {
+    test('returns an empty map for undefined or empty input', () => {
+        expect(parseCardOwnerMap(undefined)).toEqual({});
+        expect(parseCardOwnerMap('')).toEqual({});
+    });
+
+    test('parses a JSON object of card last-4 to owner name', () => {
+        expect(parseCardOwnerMap('{"1379":"Chris","8472":"Sarah"}')).toEqual({ '1379': 'Chris', '8472': 'Sarah' });
+    });
+
+    test('returns an empty map for malformed JSON', () => {
+        expect(parseCardOwnerMap('{not json')).toEqual({});
+    });
+
+    test('returns an empty map when the JSON is not an object', () => {
+        expect(parseCardOwnerMap('"a string"')).toEqual({});
+        expect(parseCardOwnerMap('["1379","Chris"]')).toEqual({});
+    });
+
+    test('drops entries whose value is not a string', () => {
+        expect(parseCardOwnerMap('{"1379":"Chris","8472":123}')).toEqual({ '1379': 'Chris' });
     });
 });
 

@@ -23,11 +23,11 @@ Config.assertMailConfig();
     try {
         const inbox = new Inbox(Config.mailHost, Config.mailEmailAddress, Config.mailPassword);
 
-        inbox.onMessage(async (message: string, date: Date) => {
+        inbox.onMessage(async (message: string) => {
             try {
                 log.info('Message received.');
 
-                const transaction = parseMessage(message, date);
+                const transaction = parseMessage(message);
                 log.info({ transaction }, 'Built transaction.');
 
                 const existingTransactions = await TransactionService.find({
