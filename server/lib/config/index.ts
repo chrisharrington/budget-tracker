@@ -5,6 +5,31 @@ export function parseCorsOrigins(value: string | undefined): string[] {
     return (value ?? '').split(',').map(origin => origin.trim()).filter(Boolean);
 }
 
+// Parses the `CARD_OWNER_MAP` JSON env (card last-4 → owner name) into a plain string map. Anything
+// that isn't a JSON object of string values yields an empty map; the mail parser then drops (and
+// logs) any transaction whose card isn't present rather than mis-attributing it.
+export function parseCardOwnerMap(value: string | undefined): Record<string, string> {
+    if (!value)
+        return {};
+
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(value);
+    } catch {
+        return {};
+    }
+
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
+        return {};
+
+    const map: Record<string, string> = {};
+    for (const [card, owner] of Object.entries(parsed))
+        if (typeof owner === 'string')
+            map[card] = owner;
+
+    return map;
+}
+
 export default class Config {
     static databaseConnectionString: string = process.env.MONGO_URI ?? 'mongodb://database:27017';
     static mongoDb: string = process.env.MONGO_DB ?? 'budget';
@@ -14,6 +39,7 @@ export default class Config {
     static expoAccessToken: string | undefined = process.env.EXPO_ACCESS_TOKEN;
     static apiKey: string | undefined = process.env.API_KEY;
     static corsOrigins: string[] = parseCorsOrigins(process.env.CORS_ORIGINS);
+    static cardOwnerMap: Record<string, string> = parseCardOwnerMap(process.env.CARD_OWNER_MAP);
     static timezone: string = 'America/Edmonton';
     static remainingBalanceUpdateCron: string = '0 0 * * MON';
     static oneTimeBalanceUpdateCron: string = '0 0 1 * *';
