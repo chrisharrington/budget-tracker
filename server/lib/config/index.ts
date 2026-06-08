@@ -43,10 +43,6 @@ export default class Config {
     static timezone: string = 'America/Edmonton';
     static remainingBalanceUpdateCron: string = '0 0 * * MON';
     static oneTimeBalanceUpdateCron: string = '0 0 1 * *';
-    static allowanceUpdateCron: string = '0 0 * * FRI';
-    static allowanceBaseWeeklyAmount: number = 5;
-    static allowanceIncrement: number = 1;
-    static allowanceMax: number = 10;
 
     // Fail loud at startup rather than silently connecting with empty credentials. Reads the static
     // fields (not process.env directly) so they remain the single source of truth.
