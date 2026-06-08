@@ -1,19 +1,17 @@
 import dayjs from 'dayjs';
-import timeZonePlugin from 'dayjs-ext/plugin/timeZone';
-import getTimezoneOffset from 'get-timezone-offset';
-import { Transaction } from '@lib/models';
-import TagService from '@lib/data/tags';
-import { Base } from './base';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
-dayjs.extend(timeZonePlugin);
+import Config from '@lib/config';
+import { Transaction } from '@lib/models';
+import { Base } from '@lib/data/base';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 class TransactionService extends Base<Transaction> {
-    private offset: number;
-
     constructor() {
         super('transactions');
-
-        this.offset = getTimezoneOffset('America/Edmonton');
     }
 
     async get(id: number) : Promise<Transaction[]> {
@@ -21,13 +19,16 @@ class TransactionService extends Base<Transaction> {
     }
 
     async getForWeek(date: Date) : Promise<Transaction[]> {
-        const start = dayjs(date).add(this.offset, 'minute',).toDate(),
-            end = dayjs(date).add(this.offset, 'minute').add(1, 'week').subtract(1, 'second').toDate();
-        
+        // Localize the week-start to Edmonton and take that day's midnight, then span a full week.
+        // Using dayjs's timezone plugin keeps the boundary correct per-instant across DST changes,
+        // unlike a fixed offset baked in at construction time.
+        const start = dayjs(date).tz(Config.timezone).startOf('day');
+        const end = start.add(1, 'week').subtract(1, 'second');
+
         return await this.find({
             date: {
-                $gte: start,
-                $lte: end
+                $gte: start.toDate(),
+                $lte: end.toDate()
             }
         }, { date: -1 });
     }
@@ -46,11 +47,6 @@ class TransactionService extends Base<Transaction> {
         }, {
             date: -1
         });
-    }
-
-    async getBalance(date: Date) : Promise<number | undefined> {
-        const transaction = await this.findOne({ date: dayjs(date).add(this.offset, 'minute').toDate(), balance: true });
-        return transaction ? transaction.amount : undefined;
     }
 
     async save(items: Transaction[]) : Promise<void> {
