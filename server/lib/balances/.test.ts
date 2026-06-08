@@ -77,4 +77,15 @@ describe('upsertBalanceFromPreviousWeek', () => {
         // untouched — the existing balance was left as-is
         expect((await BalanceService.findForWeek(startOfPreviousWeek()))?.amount).toBe(123);
     });
+
+    test('overwrites an existing balance when force is true', async () => {
+        // A stale balance is present for the week; force=true must recompute and replace it in place.
+        await BalanceService.upsertForWeek(startOfPreviousWeek(), 123);
+
+        await upsertBalanceFromPreviousWeek(true);
+
+        expect(await countBalances()).toBe(1);
+        // No transactions and no prior week → recomputed to the base allowance, not the stale 123.
+        expect((await BalanceService.findForWeek(startOfPreviousWeek()))?.amount).toBe(Config.weeklyAmount(startOfPreviousWeek()));
+    });
 });

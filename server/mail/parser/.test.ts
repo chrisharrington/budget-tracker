@@ -9,6 +9,7 @@ import { parseMessage } from '.';
 const fixture = (name: string) => readFileSync(join(import.meta.dir, '../__fixtures__', name), 'utf8');
 
 const happy = fixture('tangerine-happy.html');
+const sarah = fixture('tangerine-sarah.html');
 const missingAmount = fixture('tangerine-missing-amount.html');
 const missingMerchant = fixture('tangerine-missing-merchant.html');
 
@@ -92,6 +93,18 @@ describe('parseMessage — card/owner attribution', () => {
     test('throws when the card is not in CARD_OWNER_MAP', () => {
         Config.cardOwnerMap = { '8472': 'Sarah' };
         expect(() => parseMessage(happy)).toThrow('CARD_OWNER_MAP');
+    });
+
+    test('attributes a real Sarah-addressed email to Sarah', () => {
+        Config.cardOwnerMap = { '1379': 'Chris', '2988': 'Sarah' };
+
+        const transaction = parseMessage(sarah);
+
+        expect(transaction.owner).toBe('Sarah');
+        expect(transaction.amount).toBe(58.2);
+        expect(transaction.description).toBe('SAFEWAY');
+        // "January 12, 2026" parsed at Edmonton (MST, UTC-7) midnight.
+        expect(transaction.date.toISOString()).toBe('2026-01-12T07:00:00.000Z');
     });
 });
 
