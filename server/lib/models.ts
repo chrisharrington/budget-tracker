@@ -4,6 +4,7 @@ export interface Id {
 
 export interface Device extends Id {
     token: string;
+    disabled?: boolean;
 }
 
 export interface Budget {
@@ -31,6 +32,7 @@ export interface Tag extends Id {
 export interface NotificationTicket extends Id {
     status: string;
     notificationId: string;
+    token: string;
     receiptAcquired: boolean;
 }
 
