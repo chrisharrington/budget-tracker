@@ -1,22 +1,17 @@
-import { Application, Request, Response } from 'express';
+import { Request, Response, Router } from 'express';
 
 import * as TagService from '@lib/data/tags';
+import { asyncHandler } from '@api/async-handler';
 
+const router = Router();
 
-export default class TagRoute {
-    static initialize(app: Application) {
-        app.get('/tags/recent', this.getRecentTags.bind(this));
-    }
+async function getRecentTags(request: Request, response: Response) {
+    request.log.info('Request received: GET /tags/recent');
 
-    private static async getRecentTags(request: Request, response: Response) {
-        try {
-            request.log.info('Request received: GET /tags/recent');
-
-            const tags = await TagService.getRecent();
-            response.status(200).send(tags);
-        } catch (e) {
-            request.log.error({ err: e }, 'Request failed: GET /tags/recent');
-            response.sendStatus(500);
-        }
-    }
+    const tags = await TagService.getRecent();
+    response.status(200).send(tags);
 }
+
+router.get('/tags/recent', asyncHandler(getRecentTags));
+
+export default router;

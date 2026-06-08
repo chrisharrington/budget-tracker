@@ -1,22 +1,17 @@
-import { Application, Request, Response } from 'express';
+import { Request, Response, Router } from 'express';
 
 import * as OneTimeService from '@lib/data/one-time';
+import { asyncHandler } from '@api/async-handler';
 
+const router = Router();
 
-export default class TagRoute {
-    static initialize(app: Application) {
-        app.get('/one-time/balance', this.getOneTimeBalance.bind(this));
-    }
+async function getOneTimeBalance(request: Request, response: Response) {
+    request.log.info('Request received: GET /one-time/balance');
 
-    private static async getOneTimeBalance(request: Request, response: Response) {
-        try {
-            request.log.info('Request received: GET /one-time/balance');
-
-            const oneTime = await OneTimeService.get();
-            response.status(200).send(JSON.stringify(oneTime));
-        } catch (e) {
-            request.log.error({ err: e }, 'Request failed: GET /one-time/balance');
-            response.sendStatus(500);
-        }
-    }
+    const oneTime = await OneTimeService.get();
+    response.status(200).send(JSON.stringify(oneTime));
 }
+
+router.get('/one-time/balance', asyncHandler(getOneTimeBalance));
+
+export default router;

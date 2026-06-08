@@ -1,23 +1,34 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import express from 'express';
+import express, { Express } from 'express';
 import pinoHttp from 'pino-http';
 import pino from 'pino';
 import type { AddressInfo } from 'net';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
-import Budget from '.';
+import { errorHandler } from '@api/error-handler';
 
-describe('BudgetRoute error handling', () => {
+import budgetRouter from '.';
+
+// Builds an app wired the way api/app.ts wires it: request logging, the budget router, and the
+// central error middleware last — so thrown handler errors travel the real asyncHandler→errorHandler
+// path rather than a per-route try/catch.
+function buildApp(): Express {
+    const app = express();
+    app.use(pinoHttp({ logger: pino({ level: 'silent' }) }));
+    app.use(express.json());
+    app.use('/', budgetRouter);
+    app.use(errorHandler);
+    return app;
+}
+
+describe('budget router error handling', () => {
     test('responds 500 without leaking the internal error', async () => {
-        const app = express();
-        app.use(pinoHttp({ logger: pino({ level: 'silent' }) }));
-        Budget.initialize(app);
-        const server = app.listen(0);
+        const server = buildApp().listen(0);
         const { port } = server.address() as AddressInfo;
 
         try {
-            // No `date` query param → the handler throws `Missing date parameter…` → catch →
-            // sanitized 500. A DB-free, deterministic error path.
+            // No `date` query param → the handler throws `Missing date parameter…` → asyncHandler
+            // forwards it → errorHandler → sanitized 500. A DB-free, deterministic error path.
             const response = await fetch(`http://127.0.0.1:${port}/week`);
             const body = await response.text();
 
@@ -70,10 +81,7 @@ describe('GET /history week bucketing', () => {
     });
 
     test('groups transactions into Edmonton weeks with weekly-budget-minus-spend balances', async () => {
-        const app = express();
-        app.use(pinoHttp({ logger: pino({ level: 'silent' }) }));
-        Budget.initialize(app);
-        const server = app.listen(0);
+        const server = buildApp().listen(0);
         const { port } = server.address() as AddressInfo;
 
         try {
