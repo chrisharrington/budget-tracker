@@ -121,6 +121,15 @@ services:
             # keys, aliases) so commits made inside the container are
             # attributed correctly without per-container configuration.
             - ${HOME}/.gitconfig:/home/${DEV_USER}/.gitconfig:ro
+            # Share the host's SSH key + known_hosts so the SSH `origin` remote
+            # (ssh://git@git.chrisharrington.me:2222/...) works without minting a
+            # container-specific key. The host key is already registered on
+            # Forgejo and known_hosts already trusts the server, so fetch/push
+            # work out of the box. Read-only: the container never mutates the
+            # host's SSH state (and so won't append new known_hosts entries —
+            # add those host-side if a new SSH remote is introduced). UID
+            # alignment (DEV_UID=host UID) keeps the 0600 private key readable.
+            - ${HOME}/.ssh:/home/${DEV_USER}/.ssh:ro
             # Worktree git pointer resolution: when this stack is a git
             # worktree, /app/.git is a pointer file referencing the primary
             # checkout's .git directory at an absolute host path. Mount that

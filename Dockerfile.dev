@@ -19,8 +19,12 @@ ENV DEV_USER=${DEV_USER} DEV_UID=${DEV_UID} DEV_GID=${DEV_GID}
 # nodejs: some VS Code extensions (ESLint, JS debugger) shell out to `node` and
 # don't honor bun-as-node configuration. Bun stays the package manager and
 # runtime; node is here only to satisfy extension hosts.
+# openssh-client: git transport for the `origin` remote, which is SSH
+# (ssh://git@git.chrisharrington.me:2222/...). Without it `git pull/push origin`
+# fails with "cannot run ssh: No such file or directory". The key + known_hosts
+# come from the host's ~/.ssh, mounted read-only by the dev service in compose.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl ca-certificates git nodejs \
+    && apt-get install -y --no-install-recommends curl ca-certificates git nodejs openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
 # GitHub CLI — used for PR creation and other GitHub workflows from inside the
