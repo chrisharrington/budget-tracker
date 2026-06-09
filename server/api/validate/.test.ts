@@ -12,7 +12,13 @@ describe('validate', () => {
         const request = { body: { amount: 5 } } as Request;
         let nextErr: unknown = 'untouched';
 
-        validate(bodySchema)(request, {} as Response, ((err?: unknown) => { nextErr = err; }) as NextFunction);
+        validate(bodySchema)(
+            request,
+            {} as Response,
+            ((err?: unknown) => {
+                nextErr = err;
+            }) as NextFunction,
+        );
 
         expect(nextErr).toBeUndefined();
         expect(request.body).toEqual({ amount: 5 });
@@ -21,7 +27,13 @@ describe('validate', () => {
     test('stashes the parsed query when source is query', () => {
         const request = { query: { name: 'food' } } as unknown as Request;
 
-        validate(querySchema, 'query')(request, {} as Response, (() => { /* noop */ }) as NextFunction);
+        validate(querySchema, 'query')(
+            request,
+            {} as Response,
+            (() => {
+                /* noop */
+            }) as NextFunction,
+        );
 
         expect(request.query).toEqual({ name: 'food' });
     });
@@ -31,7 +43,13 @@ describe('validate', () => {
         let thrown: unknown;
 
         try {
-            validate(bodySchema)(request, {} as Response, (() => { /* noop */ }) as NextFunction);
+            validate(bodySchema)(
+                request,
+                {} as Response,
+                (() => {
+                    /* noop */
+                }) as NextFunction,
+            );
         } catch (error) {
             thrown = error;
         }

@@ -14,7 +14,7 @@ import logRouter from './routes/log';
 
 const PORT = 9999;
 
-async function start() {
+function start() {
     const app = express();
 
     app.use(pinoHttp({ logger }));

@@ -44,10 +44,7 @@ async function countBalances(): Promise<number> {
 
 describe('upsertBalanceFromPreviousWeek', () => {
     test('concurrent invocations leave exactly one balance document', async () => {
-        await Promise.all([
-            upsertBalanceFromPreviousWeek(true),
-            upsertBalanceFromPreviousWeek(true)
-        ]);
+        await Promise.all([upsertBalanceFromPreviousWeek(true), upsertBalanceFromPreviousWeek(true)]);
 
         expect(await countBalances()).toBe(1);
         // No transactions and no prior week → the balance is just the week's base allowance.
@@ -86,6 +83,8 @@ describe('upsertBalanceFromPreviousWeek', () => {
 
         expect(await countBalances()).toBe(1);
         // No transactions and no prior week → recomputed to the base allowance, not the stale 123.
-        expect((await BalanceService.findForWeek(startOfPreviousWeek()))?.amount).toBe(Config.weeklyAmount(startOfPreviousWeek()));
+        expect((await BalanceService.findForWeek(startOfPreviousWeek()))?.amount).toBe(
+            Config.weeklyAmount(startOfPreviousWeek()),
+        );
     });
 });

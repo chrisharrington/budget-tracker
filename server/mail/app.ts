@@ -19,7 +19,7 @@ dayjs.extend(utc);
 // leave it running idle. Kept outside the IIFE's try/catch so the throw exits non-zero.
 Config.assertMailConfig();
 
-(async () => {
+void (async () => {
     try {
         const inbox = new Inbox(Config.mailHost, Config.mailEmailAddress, Config.mailPassword);
 
@@ -32,19 +32,16 @@ Config.assertMailConfig();
 
                 const existingTransactions = await TransactionService.find({
                     description: { $regex: new RegExp(`^${transaction.description}`) },
-                    amount: transaction.amount, 
+                    amount: transaction.amount,
                     date: {
                         $gte: dayjs.utc(transaction.date).startOf('day').toDate(),
-                        $lte: dayjs.utc(transaction.date).endOf('day').toDate()
-                    }
+                        $lte: dayjs.utc(transaction.date).endOf('day').toDate(),
+                    },
                 });
                 if (existingTransactions.length)
                     transaction.description = `${transaction.description} (${existingTransactions.length + 1})`;
 
-                await Promise.all([
-                    Notifications.send(transaction),
-                    TransactionService.insertOne(transaction)
-                ]);
+                await Promise.all([Notifications.send(transaction), TransactionService.insertOne(transaction)]);
                 log.info('Transaction saved and notification sent.');
             } catch (e) {
                 log.error({ err: e }, 'Transaction failed to save.');

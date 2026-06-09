@@ -15,14 +15,13 @@ const transactions = () => collection<Transaction>('transactions');
 export async function find(query: object, sort?: Sort): Promise<Transaction[]> {
     const collection = await transactions();
     let cursor = collection.find(query);
-    if (sort)
-        cursor = cursor.sort(sort);
-    return await cursor.toArray() as Transaction[];
+    if (sort) cursor = cursor.sort(sort);
+    return (await cursor.toArray()) as Transaction[];
 }
 
 export async function findById(id: string): Promise<Transaction | null> {
     const collection = await transactions();
-    return await collection.findOne({ _id: new ObjectId(id) } as object) as Transaction | null;
+    return (await collection.findOne({ _id: new ObjectId(id) } as object)) as Transaction | null;
 }
 
 export async function getForWeek(date: Date): Promise<Transaction[]> {

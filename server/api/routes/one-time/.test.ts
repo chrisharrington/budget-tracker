@@ -45,7 +45,7 @@ describe('one-time router', () => {
 
         try {
             const response = await fetch(`http://127.0.0.1:${port}/one-time/balance`);
-            const body = await response.json() as OneTime;
+            const body = (await response.json()) as OneTime;
 
             expect(response.status).toBe(200);
             expect(body.balance).toBe(1234);

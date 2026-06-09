@@ -6,7 +6,7 @@ import {
     tagSchema,
     transactionSchema,
     transactionSplitSchema,
-    weekQuerySchema
+    weekQuerySchema,
 } from '.';
 
 const validTransaction = {
@@ -16,7 +16,7 @@ const validTransaction = {
     description: 'COFFEE',
     owner: 'Chris',
     ignored: false,
-    tags: [{ _id: 't1', name: 'food', ignore: false }]
+    tags: [{ _id: 't1', name: 'food', ignore: false }],
 };
 
 describe('transactionSchema', () => {
@@ -84,12 +84,16 @@ describe('weekQuerySchema', () => {
 
 describe('monthlyTagQuerySchema', () => {
     test('accepts valid start/end/tag', () => {
-        expect(monthlyTagQuerySchema.safeParse({ start: '2026-06-01', end: '2026-06-30', tag: 'food' }).success).toBe(true);
+        expect(monthlyTagQuerySchema.safeParse({ start: '2026-06-01', end: '2026-06-30', tag: 'food' }).success).toBe(
+            true,
+        );
     });
 
     test('rejects a bad date or an empty tag', () => {
         expect(monthlyTagQuerySchema.safeParse({ start: 'nope', end: '2026-06-30', tag: 'food' }).success).toBe(false);
-        expect(monthlyTagQuerySchema.safeParse({ start: '2026-06-01', end: '2026-06-30', tag: '' }).success).toBe(false);
+        expect(monthlyTagQuerySchema.safeParse({ start: '2026-06-01', end: '2026-06-30', tag: '' }).success).toBe(
+            false,
+        );
     });
 });
 

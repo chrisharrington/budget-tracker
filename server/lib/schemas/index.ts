@@ -10,7 +10,7 @@ const isValidDate = (value: string) => dayjs(value).isValid();
 export const tagSchema = z.looseObject({
     _id: z.string().optional(),
     name: z.string(),
-    ignore: z.boolean().default(false)
+    ignore: z.boolean().default(false),
 });
 
 export const transactionSchema = z.object({
@@ -20,24 +20,24 @@ export const transactionSchema = z.object({
     description: z.string(),
     owner: z.string(),
     ignored: z.boolean().default(false),
-    tags: z.array(tagSchema).default([])
+    tags: z.array(tagSchema).default([]),
 });
 
 export const transactionSplitSchema = z.object({
     transaction: transactionSchema,
-    newAmount: z.number()
+    newAmount: z.number(),
 });
 
 export const weekQuerySchema = z.object({
-    date: z.string().refine(isValidDate, 'Invalid date.')
+    date: z.string().refine(isValidDate, 'Invalid date.'),
 });
 
 export const monthlyTagQuerySchema = z.object({
     start: z.string().refine(isValidDate, 'Invalid start date.'),
     end: z.string().refine(isValidDate, 'Invalid end date.'),
-    tag: z.string().min(1)
+    tag: z.string().min(1),
 });
 
 export const deviceTokenSchema = z.object({
-    token: z.string().min(1)
+    token: z.string().min(1),
 });

@@ -33,11 +33,12 @@ async function request(path: string, init?: RequestInit): Promise<Response> {
     }
 }
 
-const postJson = (body: unknown): Promise<Response> => request('/device', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-});
+const postJson = (body: unknown): Promise<Response> =>
+    request('/device', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
 
 beforeAll(async () => {
     mongod = await MongoMemoryServer.create();

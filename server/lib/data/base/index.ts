@@ -8,8 +8,7 @@ import Config from '@lib/config';
 let clientPromise: Promise<MongoClient> | undefined;
 
 function getClient(): Promise<MongoClient> {
-    if (!clientPromise)
-        clientPromise = MongoClient.connect(Config.databaseConnectionString);
+    if (!clientPromise) clientPromise = MongoClient.connect(Config.databaseConnectionString);
 
     return clientPromise;
 }
@@ -17,8 +16,7 @@ function getClient(): Promise<MongoClient> {
 // Close the shared client (used by graceful shutdown; the signal wiring lives in a separate ticket).
 // Safe to call when never connected, and a later operation transparently reconnects.
 export async function closeDatabase(): Promise<void> {
-    if (!clientPromise)
-        return;
+    if (!clientPromise) return;
 
     const client = await clientPromise;
     clientPromise = undefined;

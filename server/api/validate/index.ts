@@ -8,10 +8,8 @@ export function validate(schema: z.ZodType, source: 'body' | 'query' = 'body'): 
     return (request, _response, next) => {
         const parsed = schema.parse(source === 'body' ? request.body : request.query);
 
-        if (source === 'body')
-            request.body = parsed;
-        else
-            request.query = parsed as typeof request.query;
+        if (source === 'body') request.body = parsed;
+        else request.query = parsed as typeof request.query;
 
         next();
     };

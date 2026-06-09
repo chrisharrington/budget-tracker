@@ -27,7 +27,7 @@ beforeEach(async () => {
     await (await collection<Transaction>('transactions')).deleteMany({});
 });
 
-const tag = (name: string): Tag => ({ name } as Tag);
+const tag = (name: string): Tag => ({ name }) as Tag;
 
 describe('oneTimeBalanceDelta', () => {
     const ONE_TIME = 'one-time';
@@ -75,14 +75,23 @@ describe('OneTimeService.applyTransaction', () => {
     test('spends from the pool when a transaction gains the one-time tag', async () => {
         const transactions = await collection<Transaction>('transactions');
         const { insertedId } = await transactions.insertOne({
-            amount: 25, date: new Date(), description: 'STORE', owner: 'Chris', ignored: false, tags: []
+            amount: 25,
+            date: new Date(),
+            description: 'STORE',
+            owner: 'Chris',
+            ignored: false,
+            tags: [],
         } as unknown as Transaction);
         await (await collection<OneTime>('one-time')).insertOne({ balance: 100 } as OneTime);
 
         await OneTimeService.applyTransaction({
             _id: insertedId.toString(),
-            amount: 25, date: new Date(), description: 'STORE', owner: 'Chris', ignored: false,
-            tags: [tag('one-time')]
+            amount: 25,
+            date: new Date(),
+            description: 'STORE',
+            owner: 'Chris',
+            ignored: false,
+            tags: [tag('one-time')],
         });
 
         expect((await OneTimeService.get()).balance).toBe(75);

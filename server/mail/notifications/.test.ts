@@ -11,7 +11,9 @@ let sendResult: unknown[] = [];
 let receiptResult: Record<string, unknown> = {};
 
 class MockExpo {
-    constructor(_options: unknown) { /* accessToken ignored in tests */ }
+    constructor(_options: unknown) {
+        /* accessToken ignored in tests */
+    }
     chunkPushNotifications(messages: unknown[]): unknown[][] {
         chunkCalls.push(messages);
         return [messages];
@@ -67,7 +69,7 @@ describe('Notifications.send', () => {
         await Notifications.send(transaction, device);
 
         expect(chunkCalls).toEqual([
-            [{ to: 'expo-token-1', body: 'A new transaction was made by Chris at STORE for $12.50.' }]
+            [{ to: 'expo-token-1', body: 'A new transaction was made by Chris at STORE for $12.50.' }],
         ]);
     });
 
@@ -82,7 +84,7 @@ describe('Notifications.send', () => {
             status: 'ok',
             notificationId: 'receipt-1',
             token: 'expo-token-1',
-            receiptAcquired: false
+            receiptAcquired: false,
         });
     });
 
@@ -109,9 +111,9 @@ describe('Notifications.send', () => {
 
 describe('Notifications.acquireReceipts', () => {
     async function seedTicket(notificationId: string, token: string): Promise<void> {
-        await (await collection<NotificationTicket>('notifications')).insertOne(
-            { status: 'ok', notificationId, token, receiptAcquired: false } as NotificationTicket
-        );
+        await (
+            await collection<NotificationTicket>('notifications')
+        ).insertOne({ status: 'ok', notificationId, token, receiptAcquired: false } as NotificationTicket);
     }
 
     test('marks a delivered ticket acquired and leaves devices untouched', async () => {
@@ -129,7 +131,9 @@ describe('Notifications.acquireReceipts', () => {
     test('disables the device and marks the ticket acquired on a DeviceNotRegistered receipt', async () => {
         await DeviceService.upsert({ token: 'expo-token-dead' } as Device);
         await seedTicket('receipt-dead', 'expo-token-dead');
-        receiptResult = { 'receipt-dead': { status: 'error', message: 'gone', details: { error: 'DeviceNotRegistered' } } };
+        receiptResult = {
+            'receipt-dead': { status: 'error', message: 'gone', details: { error: 'DeviceNotRegistered' } },
+        };
 
         await Notifications.acquireReceipts();
 
@@ -158,7 +162,8 @@ describe('Notifications.acquireReceipts', () => {
         await Notifications.acquireReceipts();
 
         const stillPending = await (await collection<NotificationTicket>('notifications'))
-            .find({ receiptAcquired: false }).toArray();
+            .find({ receiptAcquired: false })
+            .toArray();
         expect(stillPending.map(ticket => ticket.notificationId)).toEqual(['receipt-pending']);
     });
 });

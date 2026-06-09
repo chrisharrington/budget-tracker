@@ -25,14 +25,14 @@ export default class Inbox {
 
         this.connect();
 
-        setInterval(() => this.connect(true), HOURS*60*60*1000);
+        setInterval(() => this.connect(true), HOURS * 60 * 60 * 1000);
     }
 
     onMessage(callback: (message: string, date: Date) => void) {
         this.onMessageCallback = callback;
     }
 
-    private async connect(disconnect: boolean = false) {
+    private connect(disconnect: boolean = false) {
         if (disconnect) {
             this.block(true);
             log.info('Disconnected.');
@@ -48,13 +48,13 @@ export default class Inbox {
                 host: this.host,
                 port: 993,
                 tls: true,
-                tlsOptions: { rejectUnauthorized: false }
+                tlsOptions: { rejectUnauthorized: false },
             });
 
-            this.imap.on('error', async (error: Error) => {
+            this.imap.on('error', (error: Error) => {
                 if (error.message.indexOf('This socket has been ended by the other party') > -1) {
                     log.info('Socket terminated. Reconnecting...');
-                    await this.connect();
+                    this.connect();
                 } else {
                     log.warn('IMAP reported error.');
                     reject(error);
@@ -62,20 +62,17 @@ export default class Inbox {
             });
 
             this.imap.once('ready', () => {
-                log.info('Inbox ready.')
+                log.info('Inbox ready.');
                 this.imap.openBox('INBOX', false, error => {
-                    if (error)
-                        reject(error);
-                    else
-                        resolve();
+                    if (error) reject(error);
+                    else resolve();
                 });
             });
 
             this.imap.on('mail', async () => {
                 log.info('Mail event triggered.');
 
-                if (this.searching)
-                    log.info('Search already in progress. No additional search performed.');
+                if (this.searching) log.info('Search already in progress. No additional search performed.');
                 else {
                     this.block(true);
                     await this.unread();
@@ -99,12 +96,12 @@ export default class Inbox {
         this.searching = flag;
     }
 
-    private async unread() : Promise<void> {
+    private async unread(): Promise<void> {
         await this.ready;
 
         return new Promise<void>((resolve, reject) => {
             log.info('Searching for unread messages.');
-            this.imap.search(['UNSEEN'], async (error: Error, messageIds) => {
+            this.imap.search(['UNSEEN'], (error: Error, messageIds) => {
                 if (error) {
                     log.error({ err: error }, 'IMAP search failed.');
                     reject(error);
@@ -126,7 +123,10 @@ export default class Inbox {
                         const parser = new MailParser();
 
                         parser.once('end', mail => {
-                            if (this.onMessageCallback && mail.subject.indexOf('A new Credit Card transaction has been made') > -1) {
+                            if (
+                                this.onMessageCallback &&
+                                mail.subject.indexOf('A new Credit Card transaction has been made') > -1
+                            ) {
                                 log.info('Transaction email received.');
                                 this.onMessageCallback(mail.html, dayjs(mail.receivedDate).toDate());
                                 resolve();

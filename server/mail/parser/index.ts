@@ -31,7 +31,7 @@ const parsedSchema = z.object({
     amount: z.number().finite(),
     date: z.date(),
     description: z.string().min(1),
-    owner: z.string().min(1)
+    owner: z.string().min(1),
 });
 
 function extract(pattern: RegExp, html: string, field: string): string {

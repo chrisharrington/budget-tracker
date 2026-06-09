@@ -46,7 +46,13 @@ module.exports = tseslint.config(
         rules: {
             '@typescript-eslint/no-unused-vars': [
                 'error',
-                { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }
+                {
+                    argsIgnorePattern: '^_',
+                    varsIgnorePattern: '^_',
+                    caughtErrorsIgnorePattern: '^_',
+                    // Allow `const { omitted, ...rest } = obj` — a common way to build a value without a field.
+                    ignoreRestSiblings: true
+                }
             ]
         }
     },
