@@ -18,8 +18,7 @@ function usePretty(): boolean {
 function buildOptions(): LoggerOptions {
     const options: LoggerOptions = { level: resolveLevel() };
 
-    if (usePretty())
-        options.transport = { target: 'pino-pretty', options: { colorize: true } };
+    if (usePretty()) options.transport = { target: 'pino-pretty', options: { colorize: true } };
 
     return options;
 }

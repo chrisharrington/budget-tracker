@@ -13,7 +13,7 @@ export async function upsert(device: Device): Promise<void> {
 // has reported as stale.
 export async function list(): Promise<Device[]> {
     const collection = await devices();
-    return await collection.find({ disabled: { $ne: true } }).toArray() as Device[];
+    return (await collection.find({ disabled: { $ne: true } }).toArray()) as Device[];
 }
 
 // Flags a device as stale after Expo reports its token as `DeviceNotRegistered`. A soft flag rather

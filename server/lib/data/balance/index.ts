@@ -13,7 +13,7 @@ export async function ensureWeekOfIndex(): Promise<void> {
 
 export async function findForWeek(weekOf: Date): Promise<Balance | null> {
     const collection = await balances();
-    return await collection.findOne({ weekOf }) as Balance | null;
+    return (await collection.findOne({ weekOf })) as Balance | null;
 }
 
 // Atomically create-or-update the balance for a week. With the unique weekOf index and an equality

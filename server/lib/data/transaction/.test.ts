@@ -28,17 +28,18 @@ const fixtures: ReadonlyArray<readonly [string, string]> = [
     // Winter week — Edmonton is MST (UTC-7); the Monday-00:00 boundary is 07:00Z.
     ['winter-dst-trap', '2026-01-12T06:30:00.000Z'],
     ['winter-start', '2026-01-12T07:00:00.000Z'],
-    ['winter-end', '2026-01-19T06:59:59.000Z']
+    ['winter-end', '2026-01-19T06:59:59.000Z'],
 ];
 
-const build = (description: string, iso: string): Transaction => ({
-    amount: 10,
-    date: new Date(iso),
-    description,
-    owner: 'Chris',
-    ignored: false,
-    tags: []
-} as Transaction);
+const build = (description: string, iso: string): Transaction =>
+    ({
+        amount: 10,
+        date: new Date(iso),
+        description,
+        owner: 'Chris',
+        ignored: false,
+        tags: [],
+    }) as Transaction;
 
 beforeAll(async () => {
     mongod = await MongoMemoryServer.create();
@@ -47,8 +48,7 @@ beforeAll(async () => {
     TransactionService = await import('.');
     ({ closeDatabase } = await import('@lib/data/base'));
 
-    for (const [description, iso] of fixtures)
-        await TransactionService.insertOne(build(description, iso));
+    for (const [description, iso] of fixtures) await TransactionService.insertOne(build(description, iso));
 });
 
 afterAll(async () => {

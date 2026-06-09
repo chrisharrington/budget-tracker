@@ -62,7 +62,7 @@ describe('parseMessage — merchant extraction', () => {
         expect(parseMessage(happy).description).toBe('ROYAL OAK AUDI');
     });
 
-    test('does not mis-attribute when the merchant name contains another card\'s digits', () => {
+    test("does not mis-attribute when the merchant name contains another card's digits", () => {
         // Owner must come from the card number (1379 → Chris), never from "8472" sitting in the
         // merchant name — the exact failure mode the old substring heuristic had.
         const transaction = parseMessage(happy.replace('ROYAL OAK AUDI', 'STORE 8472'));

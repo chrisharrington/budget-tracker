@@ -20,9 +20,11 @@ dayjs.extend(timezone);
 async function getBudgetForWeek(request: Request, response: Response) {
     request.log.info('Request received: GET /week');
 
-    let current = dayjs.utc(request.query.date as string).tz('America/Edmonton').startOf('day');
-    while (current.day() !== 1)
-        current = current.subtract(1, 'day');
+    let current = dayjs
+        .utc(request.query.date as string)
+        .tz('America/Edmonton')
+        .startOf('day');
+    while (current.day() !== 1) current = current.subtract(1, 'day');
 
     const date = current.toDate(),
         transactions = await TransactionService.getForWeek(date),
@@ -34,7 +36,7 @@ async function getBudgetForWeek(request: Request, response: Response) {
         date,
         balance: await getBalanceFromPreviousWeek(current),
         weeklyAmount,
-        transactions
+        transactions,
     } satisfies Budget);
 }
 
@@ -46,13 +48,12 @@ async function getHistory(request: Request, response: Response) {
 
     transactions.forEach((transaction: Transaction) => {
         let week = dayjs(transaction.date).tz(Config.timezone).startOf('day');
-        while (week.day() !== 1)
-            week = week.subtract(1, 'day');
+        while (week.day() !== 1) week = week.subtract(1, 'day');
 
         const weekLabel = week.format();
         if (!dict[weekLabel])
             dict[weekLabel] = {
-                balance: Config.weeklyAmount(week.toDate())
+                balance: Config.weeklyAmount(week.toDate()),
             };
 
         dict[weekLabel].balance -= transaction.amount;
@@ -60,7 +61,7 @@ async function getHistory(request: Request, response: Response) {
 
     const history = Object.keys(dict)
         .map((key: string) => ({ date: dayjs(key).toDate(), balance: dict[key].balance }))
-        .sort((first, second) => dayjs(first.date).isBefore(second.date) ? 1 : -1);
+        .sort((first, second) => (dayjs(first.date).isBefore(second.date) ? 1 : -1));
 
     response.status(200).send(history);
 }
@@ -101,10 +102,7 @@ async function splitTransaction(request: Request, response: Response) {
     transaction.amount -= newAmount;
     copy.amount = newAmount;
 
-    await Promise.all([
-        TransactionService.updateOne(transaction),
-        TransactionService.insertOne(copy)
-    ]);
+    await Promise.all([TransactionService.updateOne(transaction), TransactionService.insertOne(copy)]);
 
     await updateBalance(transaction);
 
@@ -121,31 +119,41 @@ async function getSummedMonthlyAmountForTag(request: Request, response: Response
     const transactions = await TransactionService.find({
         date: {
             $gte: start.toDate(),
-            $lt: end.toDate()
+            $lt: end.toDate(),
         },
         tags: {
             $elemMatch: {
-                name: tag
-            }
-        }
+                name: tag,
+            },
+        },
     });
 
-    const sum = transactions.reduce((sum: number, curr: Transaction) => sum += curr.amount, 0);
-    response.status(200).contentType('application/json').send(JSON.stringify({
-        sum,
-        transactions: transactions
-            .sort((first, second) => dayjs(first.date).isBefore(dayjs(second.date)) ? 1 : -1)
-            .map(t => ({ description: t.description, amount: t.amount, date: dayjs(t.date).format() }))
-    }));
+    const sum = transactions.reduce((sum: number, curr: Transaction) => sum + curr.amount, 0);
+    response
+        .status(200)
+        .contentType('application/json')
+        .send(
+            JSON.stringify({
+                sum,
+                transactions: transactions
+                    .sort((first, second) => (dayjs(first.date).isBefore(dayjs(second.date)) ? 1 : -1))
+                    .map(t => ({ description: t.description, amount: t.amount, date: dayjs(t.date).format() })),
+            }),
+        );
 }
 
 async function getBalanceFromPreviousWeek(date: dayjs.Dayjs) {
-    const startOfPreviousWeek = dayjs(date).tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week').toDate();
+    const startOfPreviousWeek = dayjs(date)
+        .tz(Config.timezone)
+        .startOf('week')
+        .add(1, 'day')
+        .subtract(1, 'week')
+        .toDate();
     const balance = await BalanceService.findForWeek(startOfPreviousWeek);
     return balance?.amount;
 }
 
-async function checkTransaction(transaction: Transaction) : Promise<boolean> {
+function checkTransaction(transaction: Transaction): boolean {
     const startOfPreviousWeek = dayjs().tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week');
     const date = dayjs(transaction.date);
 
@@ -156,15 +164,18 @@ async function updateBalance(transaction: Transaction) {
     const startOfPreviousWeek = dayjs().tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week');
     const startOfThisWeek = startOfPreviousWeek.add(1, 'week');
     const date = dayjs(transaction.date);
-    if (date.isAfter(startOfPreviousWeek) && date.isBefore(startOfThisWeek))
-        await upsertBalanceFromPreviousWeek(true);
+    if (date.isAfter(startOfPreviousWeek) && date.isBefore(startOfThisWeek)) await upsertBalanceFromPreviousWeek(true);
 }
 
 const router = Router();
 
 router.get('/week', validate(weekQuerySchema, 'query'), asyncHandler(getBudgetForWeek));
 router.get('/history', asyncHandler(getHistory));
-router.get('/transaction/sum-monthly', validate(monthlyTagQuerySchema, 'query'), asyncHandler(getSummedMonthlyAmountForTag));
+router.get(
+    '/transaction/sum-monthly',
+    validate(monthlyTagQuerySchema, 'query'),
+    asyncHandler(getSummedMonthlyAmountForTag),
+);
 router.post('/transaction', validate(transactionSchema), asyncHandler(updateTransaction));
 router.post('/transaction/split', validate(transactionSplitSchema), asyncHandler(splitTransaction));
 

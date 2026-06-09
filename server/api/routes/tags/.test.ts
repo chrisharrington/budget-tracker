@@ -30,9 +30,11 @@ beforeAll(async () => {
     Config.databaseConnectionString = mongod.getUri();
     ({ collection, closeDatabase } = await import('@lib/data/base'));
 
-    await (await collection<Tag>('tags')).insertMany([
+    await (
+        await collection<Tag>('tags')
+    ).insertMany([
         { name: 'bravo', ignore: false },
-        { name: 'alpha', ignore: false }
+        { name: 'alpha', ignore: false },
     ] as Tag[]);
 });
 
@@ -48,7 +50,7 @@ describe('tags router', () => {
 
         try {
             const response = await fetch(`http://127.0.0.1:${port}/tags/recent`);
-            const body = await response.json() as Tag[];
+            const body = (await response.json()) as Tag[];
 
             expect(response.status).toBe(200);
             expect(body.map(tag => tag.name)).toEqual(['alpha', 'bravo']);

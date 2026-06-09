@@ -1,16 +1,16 @@
-import dayjs from 'dayjs';
-
 // Parses a comma-separated `CORS_ORIGINS` value into a trimmed allowlist, dropping blank entries.
 export function parseCorsOrigins(value: string | undefined): string[] {
-    return (value ?? '').split(',').map(origin => origin.trim()).filter(Boolean);
+    return (value ?? '')
+        .split(',')
+        .map(origin => origin.trim())
+        .filter(Boolean);
 }
 
 // Parses the `CARD_OWNER_MAP` JSON env (card last-4 → owner name) into a plain string map. Anything
 // that isn't a JSON object of string values yields an empty map; the mail parser then drops (and
 // logs) any transaction whose card isn't present rather than mis-attributing it.
 export function parseCardOwnerMap(value: string | undefined): Record<string, string> {
-    if (!value)
-        return {};
+    if (!value) return {};
 
     let parsed: unknown;
     try {
@@ -19,13 +19,10 @@ export function parseCardOwnerMap(value: string | undefined): Record<string, str
         return {};
     }
 
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
-        return {};
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
 
     const map: Record<string, string> = {};
-    for (const [card, owner] of Object.entries(parsed))
-        if (typeof owner === 'string')
-            map[card] = owner;
+    for (const [card, owner] of Object.entries(parsed)) if (typeof owner === 'string') map[card] = owner;
 
     return map;
 }
@@ -54,22 +51,20 @@ export default class Config {
         if (!this.mailPassword) missing.push('MAIL_PASSWORD');
 
         if (missing.length)
-            throw new Error(`Missing required mail configuration: ${missing.join(', ')}. Set these environment variables.`);
+            throw new Error(
+                `Missing required mail configuration: ${missing.join(', ')}. Set these environment variables.`,
+            );
     }
 
     static weeklyAmount = (date: Date) => {
-        if (date >= new Date(2025, 0, 1))
-            return 400;
-        if (date >= new Date(2024, 7, 19))
-            return 750;
-        if (date >= new Date(2021, 11, 5))
-            return 800;
-        if (date >= new Date(2021, 7, 16))
-            return 1000;
+        if (date >= new Date(2025, 0, 1)) return 400;
+        if (date >= new Date(2024, 7, 19)) return 750;
+        if (date >= new Date(2021, 11, 5)) return 800;
+        if (date >= new Date(2021, 7, 16)) return 1000;
         return 500;
-    }
+    };
 
     static oneTimeAmount = (date: Date = new Date()) => {
         return date >= new Date(2024, 11, 15) ? 2000 : 1500;
-    }
-} 
+    };
+}

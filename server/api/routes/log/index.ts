@@ -47,16 +47,27 @@ export function recordClientLog(raw: string, log: Logger = logger): void {
     const context = entry.error === undefined ? { source: 'app' } : { source: 'app', err: entry.error };
 
     switch (entry.level) {
-        case 'fatal': log.fatal(context, entry.message); break;
-        case 'error': log.error(context, entry.message); break;
-        case 'warn': log.warn(context, entry.message); break;
-        case 'debug': log.debug(context, entry.message); break;
-        case 'trace': log.trace(context, entry.message); break;
-        default: log.info(context, entry.message);
+        case 'fatal':
+            log.fatal(context, entry.message);
+            break;
+        case 'error':
+            log.error(context, entry.message);
+            break;
+        case 'warn':
+            log.warn(context, entry.message);
+            break;
+        case 'debug':
+            log.debug(context, entry.message);
+            break;
+        case 'trace':
+            log.trace(context, entry.message);
+            break;
+        default:
+            log.info(context, entry.message);
     }
 }
 
-async function log(request: Request, response: Response) {
+function log(request: Request, response: Response) {
     const raw = typeof request.body === 'string' ? request.body : JSON.stringify(request.body);
     recordClientLog(raw);
     response.sendStatus(200);

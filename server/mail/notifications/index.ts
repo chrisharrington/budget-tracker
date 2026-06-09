@@ -12,11 +12,11 @@ const log = logger.child({ module: 'mail' });
 export default class Notifications {
     private static expo = new Expo({ accessToken: Config.expoAccessToken });
 
-    static async send(transaction: Transaction, device?: Device) : Promise<void> {
+    static async send(transaction: Transaction, device?: Device): Promise<void> {
         const devices = device ? [device] : await DeviceService.list();
         const messages: ExpoPushMessage[] = devices.map((device: Device) => ({
             to: device.token,
-            body: `A new transaction was made by ${transaction.owner} at ${transaction.description} for $${transaction.amount.toFixed(2)}.`
+            body: `A new transaction was made by ${transaction.owner} at ${transaction.description} for $${transaction.amount.toFixed(2)}.`,
         }));
 
         const chunks = this.expo.chunkPushNotifications(messages);
@@ -36,9 +36,11 @@ export default class Notifications {
                 if (ticket.status === 'ok') {
                     pending.push({ status: ticket.status, notificationId: ticket.id, token, receiptAcquired: false });
                 } else {
-                    log.warn({ token, message: ticket.message, details: ticket.details }, 'Push ticket reported an error.');
-                    if (ticket.details?.error === 'DeviceNotRegistered')
-                        await DeviceService.disableByToken(token);
+                    log.warn(
+                        { token, message: ticket.message, details: ticket.details },
+                        'Push ticket reported an error.',
+                    );
+                    if (ticket.details?.error === 'DeviceNotRegistered') await DeviceService.disableByToken(token);
                 }
             }
         }
@@ -51,8 +53,7 @@ export default class Notifications {
     // from the response and stay pending for the next run.
     static async acquireReceipts(): Promise<void> {
         const pending = await NotificationService.listUnacquired();
-        if (!pending.length)
-            return;
+        if (!pending.length) return;
 
         log.info({ count: pending.length }, 'Acquiring push notification receipts.');
 
@@ -69,11 +70,13 @@ export default class Notifications {
                 if (receipt.status === 'ok') {
                     log.info({ receiptId }, 'Push notification delivered.');
                 } else {
-                    log.warn({ receiptId, message: receipt.message, details: receipt.details }, 'Push notification delivery failed.');
+                    log.warn(
+                        { receiptId, message: receipt.message, details: receipt.details },
+                        'Push notification delivery failed.',
+                    );
                     if (receipt.details?.error === 'DeviceNotRegistered') {
                         const token = tokensByReceiptId.get(receiptId);
-                        if (token)
-                            await DeviceService.disableByToken(token);
+                        if (token) await DeviceService.disableByToken(token);
                     }
                 }
             }
@@ -83,9 +86,15 @@ export default class Notifications {
     }
 
     static startReceiptAcquisitionJob(): void {
-        const job = new CronJob(Config.notificationReceiptCron, async () => {
-            await this.acquireReceipts();
-        }, null, true, Config.timezone);
+        const job = new CronJob(
+            Config.notificationReceiptCron,
+            async () => {
+                await this.acquireReceipts();
+            },
+            null,
+            true,
+            Config.timezone,
+        );
 
         job.start();
 

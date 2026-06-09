@@ -11,7 +11,7 @@ describe('copyTransaction', () => {
         description: 'STORE',
         owner: 'Chris',
         ignored: false,
-        tags: [{ _id: 't1', name: 'food', ignore: false }]
+        tags: [{ _id: 't1', name: 'food', ignore: false }],
     };
 
     test('clones the data fields without carrying the _id', () => {

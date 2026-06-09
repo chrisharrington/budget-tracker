@@ -32,7 +32,7 @@ describe('NotificationService', () => {
     test('listUnacquired returns only tickets still awaiting a receipt', async () => {
         await NotificationService.insert([
             { status: 'ok', notificationId: 'receipt-1', token: 'token-1', receiptAcquired: false },
-            { status: 'ok', notificationId: 'receipt-2', token: 'token-2', receiptAcquired: true }
+            { status: 'ok', notificationId: 'receipt-2', token: 'token-2', receiptAcquired: true },
         ]);
 
         const pending = await NotificationService.listUnacquired();
@@ -44,7 +44,7 @@ describe('NotificationService', () => {
     test('markAcquired flips only the named tickets', async () => {
         await NotificationService.insert([
             { status: 'ok', notificationId: 'receipt-1', token: 'token-1', receiptAcquired: false },
-            { status: 'ok', notificationId: 'receipt-2', token: 'token-2', receiptAcquired: false }
+            { status: 'ok', notificationId: 'receipt-2', token: 'token-2', receiptAcquired: false },
         ]);
 
         await NotificationService.markAcquired(['receipt-1']);
@@ -55,7 +55,7 @@ describe('NotificationService', () => {
 
     test('markAcquired ignores unknown receipt ids without touching existing tickets', async () => {
         await NotificationService.insert([
-            { status: 'ok', notificationId: 'receipt-1', token: 'token-1', receiptAcquired: false }
+            { status: 'ok', notificationId: 'receipt-1', token: 'token-1', receiptAcquired: false },
         ]);
 
         await NotificationService.markAcquired(['does-not-exist']);

@@ -12,7 +12,10 @@ describe('normalizeLogEntry', () => {
     });
 
     test('treats a bare string as the message at info', () => {
-        expect(normalizeLogEntry('Error fetching budget.')).toEqual({ level: 'info', message: 'Error fetching budget.' });
+        expect(normalizeLogEntry('Error fetching budget.')).toEqual({
+            level: 'info',
+            message: 'Error fetching budget.',
+        });
     });
 
     test('falls back to the raw body when the JSON object has no message', () => {
@@ -31,9 +34,16 @@ describe('normalizeLogEntry', () => {
 });
 
 describe('recordClientLog', () => {
-    function capture(): { log: Logger, records: () => Array<Record<string, unknown>> } {
+    function capture(): { log: Logger; records: () => Array<Record<string, unknown>> } {
         const lines: string[] = [];
-        const log = pino({ level: 'trace' }, { write: (line: string) => { lines.push(line); } });
+        const log = pino(
+            { level: 'trace' },
+            {
+                write: (line: string) => {
+                    lines.push(line);
+                },
+            },
+        );
         return { log, records: () => lines.map(line => JSON.parse(line)) };
     }
 

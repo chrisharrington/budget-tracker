@@ -48,7 +48,10 @@ describe('collection', () => {
             // Read directly from the configured database name; a hard-coded 'budget' would miss this.
             const client = await MongoClient.connect(mongod.getUri());
             try {
-                const doc = await client.db('mongo_db_honored').collection('widgets').findOne({ name: 'configured-db' });
+                const doc = await client
+                    .db('mongo_db_honored')
+                    .collection('widgets')
+                    .findOne({ name: 'configured-db' });
                 expect(doc?.value).toBe(99);
             } finally {
                 await client.close();

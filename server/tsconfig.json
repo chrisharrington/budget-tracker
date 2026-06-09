@@ -1,27 +1,21 @@
 {
     "compilerOptions": {
-      "target": "es6",
-      "module": "preserve",
-      "moduleResolution": "bundler",
-      "strict": true,
-      "jsx": "react",
-      "paths": {
-          "@root/*": ["./*"],
-          "@lib/*": ["./lib/*"],
-          "@api/*": ["./api/*"]
-      },
-      "sourceMap": true,
-      "esModuleInterop": true,
-      "skipLibCheck": true,
-      "resolveJsonModule": true,
-      "allowSyntheticDefaultImports": true
+        "target": "es6",
+        "module": "preserve",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "jsx": "react",
+        "paths": {
+            "@root/*": ["./*"],
+            "@lib/*": ["./lib/*"],
+            "@api/*": ["./api/*"]
+        },
+        "sourceMap": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "allowSyntheticDefaultImports": true
     },
-    "include": [
-      "**/*.ts",
-      "**/*.tsx",
-      "./node_modules/@types/**/*.d.ts"
-    ],
-    "exclude": [
-      "node_modules"
-    ]
-  }
+    "include": ["**/*.ts", "**/*.tsx", "./node_modules/@types/**/*.d.ts"],
+    "exclude": ["node_modules"]
+}

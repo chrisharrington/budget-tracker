@@ -60,8 +60,8 @@ describe('budget router request validation', () => {
                 description: 'COFFEE',
                 owner: 'Chris',
                 ignored: false,
-                tags: []
-            })
+                tags: [],
+            }),
         });
         expect(status).toBe(400);
     });
@@ -87,7 +87,7 @@ describe('GET /history week bucketing', () => {
                 description,
                 owner: 'Chris',
                 ignored,
-                tags: []
+                tags: [],
             } as import('@lib/models').Transaction);
         };
 
@@ -112,7 +112,7 @@ describe('GET /history week bucketing', () => {
 
         try {
             const response = await fetch(`http://127.0.0.1:${port}/history`);
-            const body = await response.json() as Array<{ date: string; balance: number }>;
+            const body = (await response.json()) as Array<{ date: string; balance: number }>;
 
             expect(response.status).toBe(200);
             // Weekly amount is 400 for 2026 (Config.weeklyAmount). Two weeks, sorted date-descending.
@@ -155,15 +155,16 @@ describe('budget router (DB-backed routes)', () => {
         await (await collection<OneTime>('one-time')).deleteMany({});
     });
 
-    const transaction = (overrides: Partial<Transaction>): Transaction => ({
-        amount: 10,
-        date: new Date('2026-06-03T12:00:00.000Z'),
-        description: 'STORE',
-        owner: 'Chris',
-        ignored: false,
-        tags: [],
-        ...overrides
-    } as Transaction);
+    const transaction = (overrides: Partial<Transaction>): Transaction =>
+        ({
+            amount: 10,
+            date: new Date('2026-06-03T12:00:00.000Z'),
+            description: 'STORE',
+            owner: 'Chris',
+            ignored: false,
+            tags: [],
+            ...overrides,
+        }) as Transaction;
 
     async function request(path: string, init?: RequestInit): Promise<Response> {
         const server = buildApp().listen(0);
@@ -175,24 +176,29 @@ describe('budget router (DB-backed routes)', () => {
         }
     }
 
-    const post = (path: string, body: unknown): Promise<Response> => request(path, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-    });
+    const post = (path: string, body: unknown): Promise<Response> =>
+        request(path, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
 
     // The route's own checkTransaction/updateBalance derive these boundaries from `dayjs()` now, so the
     // tests build their dates the same way to stay deterministic regardless of the day they run.
     const startOfPreviousWeek = () => dayjs().tz(Config.timezone).startOf('week').add(1, 'day').subtract(1, 'week');
 
-    test('GET /week returns the weekly amount, carried balance, and the week\'s transactions', async () => {
-        await TransactionService.insertOne(transaction({ description: 'in-1', amount: 100, date: new Date('2026-06-03T12:00:00.000Z') }));
-        await TransactionService.insertOne(transaction({ description: 'in-2', amount: 50, date: new Date('2026-06-04T12:00:00.000Z') }));
+    test("GET /week returns the weekly amount, carried balance, and the week's transactions", async () => {
+        await TransactionService.insertOne(
+            transaction({ description: 'in-1', amount: 100, date: new Date('2026-06-03T12:00:00.000Z') }),
+        );
+        await TransactionService.insertOne(
+            transaction({ description: 'in-2', amount: 50, date: new Date('2026-06-04T12:00:00.000Z') }),
+        );
         // Prior-week balance the route carries forward (week of Mon 2026-05-25 Edmonton).
         await BalanceService.upsertForWeek(dayjs.tz('2026-05-25', Config.timezone).toDate(), 370);
 
         const response = await request('/week?date=2026-06-03');
-        const body = await response.json() as { weeklyAmount: number; balance: number; transactions: Transaction[] };
+        const body = (await response.json()) as { weeklyAmount: number; balance: number; transactions: Transaction[] };
 
         expect(response.status).toBe(200);
         expect(body.weeklyAmount).toBe(400);
@@ -202,7 +208,9 @@ describe('budget router (DB-backed routes)', () => {
 
     test('POST /transaction updates tags, applies the one-time delta, and snapshots the previous week', async () => {
         await (await collection<OneTime>('one-time')).insertOne({ balance: 100 } as OneTime);
-        const seeded = await TransactionService.insertOne(transaction({ amount: 25, date: startOfPreviousWeek().add(1, 'hour').toDate() }));
+        const seeded = await TransactionService.insertOne(
+            transaction({ amount: 25, date: startOfPreviousWeek().add(1, 'hour').toDate() }),
+        );
 
         const response = await post('/transaction', {
             _id: String(seeded._id),
@@ -211,7 +219,7 @@ describe('budget router (DB-backed routes)', () => {
             description: 'STORE',
             owner: 'Chris',
             ignored: false,
-            tags: [{ name: 'one-time', ignore: false }]
+            tags: [{ name: 'one-time', ignore: false }],
         });
 
         expect(response.status).toBe(200);
@@ -237,7 +245,7 @@ describe('budget router (DB-backed routes)', () => {
             description: 'STORE',
             owner: 'Chris',
             ignored: false,
-            tags: []
+            tags: [],
         });
 
         expect(response.status).toBe(200);
@@ -252,14 +260,16 @@ describe('budget router (DB-backed routes)', () => {
             description: 'STORE',
             owner: 'Chris',
             ignored: false,
-            tags: []
+            tags: [],
         });
 
         expect(response.status).toBe(400);
     });
 
     test('POST /transaction/split preserves the total across the original and the new transaction', async () => {
-        const seeded = await TransactionService.insertOne(transaction({ amount: 100, date: startOfPreviousWeek().add(1, 'hour').toDate() }));
+        const seeded = await TransactionService.insertOne(
+            transaction({ amount: 100, date: startOfPreviousWeek().add(1, 'hour').toDate() }),
+        );
 
         const response = await post('/transaction/split', {
             transaction: {
@@ -269,9 +279,9 @@ describe('budget router (DB-backed routes)', () => {
                 description: 'STORE',
                 owner: 'Chris',
                 ignored: false,
-                tags: []
+                tags: [],
             },
-            newAmount: 30
+            newAmount: 30,
         });
 
         expect(response.status).toBe(200);
@@ -283,13 +293,31 @@ describe('budget router (DB-backed routes)', () => {
 
     test('GET /transaction/sum-monthly sums tagged transactions within the date range', async () => {
         const groceries = [{ _id: 'g', name: 'groceries', ignore: false }];
-        await TransactionService.insertOne(transaction({ description: 'g1', amount: 40, date: new Date('2026-03-05T12:00:00.000Z'), tags: groceries }));
-        await TransactionService.insertOne(transaction({ description: 'g2', amount: 60, date: new Date('2026-03-20T12:00:00.000Z'), tags: groceries }));
-        await TransactionService.insertOne(transaction({ description: 'out-of-range', amount: 999, date: new Date('2026-04-05T12:00:00.000Z'), tags: groceries }));
-        await TransactionService.insertOne(transaction({ description: 'other-tag', amount: 500, date: new Date('2026-03-10T12:00:00.000Z'), tags: [{ _id: 'd', name: 'dining', ignore: false }] }));
+        await TransactionService.insertOne(
+            transaction({ description: 'g1', amount: 40, date: new Date('2026-03-05T12:00:00.000Z'), tags: groceries }),
+        );
+        await TransactionService.insertOne(
+            transaction({ description: 'g2', amount: 60, date: new Date('2026-03-20T12:00:00.000Z'), tags: groceries }),
+        );
+        await TransactionService.insertOne(
+            transaction({
+                description: 'out-of-range',
+                amount: 999,
+                date: new Date('2026-04-05T12:00:00.000Z'),
+                tags: groceries,
+            }),
+        );
+        await TransactionService.insertOne(
+            transaction({
+                description: 'other-tag',
+                amount: 500,
+                date: new Date('2026-03-10T12:00:00.000Z'),
+                tags: [{ _id: 'd', name: 'dining', ignore: false }],
+            }),
+        );
 
         const response = await request('/transaction/sum-monthly?start=2026-03-01&end=2026-04-01&tag=groceries');
-        const body = await response.json() as { sum: number; transactions: unknown[] };
+        const body = (await response.json()) as { sum: number; transactions: unknown[] };
 
         expect(response.status).toBe(200);
         expect(body.sum).toBe(100);

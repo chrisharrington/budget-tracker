@@ -31,9 +31,8 @@ async function update(oneTime: OneTime): Promise<void> {
 
 export async function get(): Promise<OneTime> {
     const collection = await oneTimes();
-    const oneTime = await collection.findOne({}) as OneTime | null;
-    if (!oneTime)
-        throw new Error('No one-time balance record found.');
+    const oneTime = (await collection.findOne({})) as OneTime | null;
+    if (!oneTime) throw new Error('No one-time balance record found.');
     return oneTime;
 }
 
@@ -41,8 +40,7 @@ export async function applyTransaction(newTransaction: Transaction): Promise<voi
     const oldTransaction = await TransactionService.findById(newTransaction._id),
         oneTime = await get();
 
-    if (!oldTransaction)
-        throw new Error(`Transaction not found: ${newTransaction._id}.`);
+    if (!oldTransaction) throw new Error(`Transaction not found: ${newTransaction._id}.`);
 
     oneTime.balance += oneTimeBalanceDelta(oldTransaction.tags, newTransaction.tags, newTransaction.amount);
 

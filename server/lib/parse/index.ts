@@ -10,6 +10,6 @@ export function copyTransaction(t: Transaction): Transaction {
         description: t.description,
         owner: t.owner,
         ignored: t.ignored,
-        tags: [...t.tags]
+        tags: [...t.tags],
     } as Transaction;
 }

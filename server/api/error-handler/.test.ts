@@ -8,9 +8,22 @@ function stubs() {
     const logged: unknown[] = [];
     // `response` exposes only sendStatus — a `.send`/`.json` call would throw, so a passing test
     // proves the handler never serializes the error to the client.
-    const response = { sendStatus: (code: number) => { statuses.push(code); return response; } } as unknown as Response;
-    const request = { log: { error: (context: unknown) => { logged.push(context); } } } as unknown as Request;
-    const next = (() => { /* unused */ }) as unknown as NextFunction;
+    const response = {
+        sendStatus: (code: number) => {
+            statuses.push(code);
+            return response;
+        },
+    } as unknown as Response;
+    const request = {
+        log: {
+            error: (context: unknown) => {
+                logged.push(context);
+            },
+        },
+    } as unknown as Request;
+    const next = (() => {
+        /* unused */
+    }) as unknown as NextFunction;
     return { request, response, next, statuses, logged };
 }
 

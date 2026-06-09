@@ -10,6 +10,8 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # JavaScript files
 *.js
 *.js.map
+# ...except the ESLint flat config, which must be committed.
+!eslint.config.js
 
 # Runtime data
 pids

@@ -70,14 +70,14 @@ describe('parseCorsOrigins', () => {
     test('splits a comma-separated list and trims surrounding whitespace', () => {
         expect(parseCorsOrigins('https://a.example.com, https://b.example.com ')).toEqual([
             'https://a.example.com',
-            'https://b.example.com'
+            'https://b.example.com',
         ]);
     });
 
     test('drops blank entries from trailing or doubled commas', () => {
         expect(parseCorsOrigins('https://a.example.com,,https://b.example.com,')).toEqual([
             'https://a.example.com',
-            'https://b.example.com'
+            'https://b.example.com',
         ]);
     });
 });
@@ -110,7 +110,7 @@ describe('Config.assertMailConfig', () => {
     const original = {
         host: Config.mailHost,
         user: Config.mailEmailAddress,
-        password: Config.mailPassword
+        password: Config.mailPassword,
     };
 
     afterEach(() => {

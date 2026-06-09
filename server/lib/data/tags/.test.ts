@@ -19,8 +19,9 @@ beforeAll(async () => {
     // Seed names out of order so the sort is actually exercised. t00..t11.
     const tags = await collection<Tag>('tags');
     await tags.insertMany(
-        ['t05', 't00', 't11', 't03', 't08', 't01', 't09', 't02', 't10', 't07', 't04', 't06']
-            .map(name => ({ name, ignore: false } as Tag))
+        ['t05', 't00', 't11', 't03', 't08', 't01', 't09', 't02', 't10', 't07', 't04', 't06'].map(
+            name => ({ name, ignore: false }) as Tag,
+        ),
     );
 });
 

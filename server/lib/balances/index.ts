@@ -15,9 +15,15 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 export function startMonthlyOneTimeBalanceIncreaseJob() {
-    const job = new CronJob(Config.oneTimeBalanceUpdateCron, async () => {
-        await OneTimeService.addAmount(Config.oneTimeAmount());
-    }, null, true, Config.timezone);
+    const job = new CronJob(
+        Config.oneTimeBalanceUpdateCron,
+        async () => {
+            await OneTimeService.addAmount(Config.oneTimeAmount());
+        },
+        null,
+        true,
+        Config.timezone,
+    );
 
     job.start();
 
@@ -25,11 +31,17 @@ export function startMonthlyOneTimeBalanceIncreaseJob() {
 }
 
 export function startWeeklyRemainingBalanceJob() {
-    upsertBalanceFromPreviousWeek();
+    void upsertBalanceFromPreviousWeek();
 
-    const job = new CronJob(Config.remainingBalanceUpdateCron, async () => {
-        await upsertBalanceFromPreviousWeek();
-    }, null, true, Config.timezone);
+    const job = new CronJob(
+        Config.remainingBalanceUpdateCron,
+        async () => {
+            await upsertBalanceFromPreviousWeek();
+        },
+        null,
+        true,
+        Config.timezone,
+    );
 
     job.start();
 
@@ -57,12 +69,9 @@ export async function upsertBalanceFromPreviousWeek(force: boolean = false) {
 
     // Exact match on the prior week's start date (the unique weekOf index guarantees a single doc),
     // replacing the midnight-straddling range that was hedging against drift.
-    const lastWeeksBalance = await BalanceService.findForWeek(
-        dayjs(startOfPreviousWeek).subtract(1, 'week').toDate()
-    );
+    const lastWeeksBalance = await BalanceService.findForWeek(dayjs(startOfPreviousWeek).subtract(1, 'week').toDate());
 
-    if (lastWeeksBalance)
-        sum -= lastWeeksBalance.amount;
+    if (lastWeeksBalance) sum -= lastWeeksBalance.amount;
 
     const amount = Config.weeklyAmount(startOfPreviousWeek) - sum;
     await BalanceService.upsertForWeek(startOfPreviousWeek, amount);

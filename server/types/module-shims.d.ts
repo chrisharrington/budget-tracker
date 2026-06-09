@@ -8,7 +8,7 @@ declare module 'cron' {
             onTick: () => void,
             onComplete?: (() => void) | null,
             start?: boolean,
-            timeZone?: string
+            timeZone?: string,
         );
         start(): void;
         stop(): void;
