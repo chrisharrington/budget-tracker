@@ -10,7 +10,6 @@
             "@lib/*": ["./lib/*"],
             "@api/*": ["./api/*"]
         },
-        "sourceMap": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "resolveJsonModule": true,
