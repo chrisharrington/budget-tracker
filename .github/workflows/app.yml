@@ -1,0 +1,41 @@
+name: app
+
+# Mirrors server.yml's shape for the app subproject, but the app has no test/lint/format/type-check
+# story yet, so the only active step today is the dependency install (which proves the lockfile
+# resolves). BTAPP-2 wires up the front-end test/lint framework and uncomments the gate steps below.
+# Path-filtered so it only runs when app/ changes.
+on:
+    push:
+        branches: [main]
+        paths: ['app/**']
+    pull_request:
+        paths: ['app/**']
+
+jobs:
+    check:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: app
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: oven-sh/setup-bun@v1
+
+            - name: Cache bun install cache
+              uses: actions/cache@v4
+              with:
+                  path: ~/.bun/install/cache
+                  key: bun-${{ runner.os }}-app-${{ hashFiles('app/bun.lock') }}
+                  restore-keys: bun-${{ runner.os }}-app-
+
+            - run: bun install --frozen-lockfile
+
+            # TODO(BTAPP-2): enable the gate steps below once the app has them green.
+            #   - `bun test` currently errors on zero test files; needs a test suite.
+            #   - `bunx tsc --noEmit` needs the Expo tsconfig made CLI-clean (customConditions vs node10).
+            #   - lint / format:check need app-side eslint + prettier scripts (cf. server BTAPI-25).
+            # - run: bun test
+            # - run: bunx tsc --noEmit
+            # - run: bun run lint
+            # - run: bun run format:check
