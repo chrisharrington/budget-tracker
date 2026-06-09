@@ -42,6 +42,14 @@ services:
             # under the ./server:/app bind mount.
             - /app/node_modules
         command: bun run api:run
+        # Cheap liveness probe against /health (no Mongo, no date). The oven/bun
+        # image ships no curl, so use bun's fetch directly.
+        healthcheck:
+            test: ["CMD", "bun", "-e", "const r = await fetch('http://localhost:9999/health'); process.exit(r.ok ? 0 : 1)"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 10s
         labels:
             - com.centurylinklabs.watchtower.enable=false
         networks:

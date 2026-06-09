@@ -8,6 +8,7 @@ import budgetRouter from '@api/routes/budget';
 import deviceRouter from '@api/routes/device';
 import tagsRouter from '@api/routes/tags';
 import oneTimeRouter from '@api/routes/one-time';
+import healthRouter from '@api/routes/health';
 import { startWeeklyRemainingBalanceJob, startMonthlyOneTimeBalanceIncreaseJob } from '@lib/balances';
 import { errorHandler } from '@api/error-handler';
 import logRouter from './routes/log';
@@ -26,6 +27,7 @@ function start() {
     app.use('/', tagsRouter);
     app.use('/', oneTimeRouter);
     app.use('/', logRouter);
+    app.use('/', healthRouter);
 
     startWeeklyRemainingBalanceJob();
     startMonthlyOneTimeBalanceIncreaseJob();
