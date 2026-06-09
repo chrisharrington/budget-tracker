@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import type { NextFunction, Request, Response } from 'express';
+import { z } from 'zod';
 
 import { errorHandler } from '.';
 
@@ -39,10 +40,11 @@ describe('errorHandler', () => {
 
     test('maps a ZodError to 400', () => {
         const { request, response, next, statuses } = stubs();
-        const err = new Error('invalid body');
-        err.name = 'ZodError';
+        // A real ZodError — the exact type the `validate` middleware throws on a bad payload.
+        const result = z.object({ name: z.string() }).safeParse({ name: 123 });
+        if (result.success) throw new Error('expected the schema to reject the payload');
 
-        errorHandler(err, request, response, next);
+        errorHandler(result.error, request, response, next);
 
         expect(statuses).toEqual([400]);
     });
