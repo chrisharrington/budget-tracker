@@ -199,6 +199,19 @@ The backend has a type-check script — **always** type-check via `bun --cwd=./s
 - Don't mock first-party components when rendering them in tests. Mock at external boundaries (network, time, third-party SDKs). For data-layer tests, drive the real `Base` class against an ephemeral `mongodb-memory-server` instance — point it there by setting `Config.databaseConnectionString` before constructing the repository (see `server/lib/data/base/.test.ts`).
 - **Folder-per-tested-subject.** Anything that requires tests gets its own folder. The subject is `index.(ts|tsx)`; the test sits alongside it in the same folder, named `.test.ts` / `.test.tsx` (Bun discovers this dotfile; the test imports the subject with `import … from '.'`). Hook folder names drop the `use-` prefix (the export inside is still `useSystem`). Plain modules that have no tests (type declarations, trivial factory functions) stay as flat files.
 
+## Continuous Integration
+
+GitHub Actions gates each subproject independently, mirroring the monorepo split. Both workflows run on `pull_request` and on `push` to `main`, and are **path-filtered** so each only runs when its own subproject changes.
+
+| Workflow | File | Path filter | Runs |
+|---|---|---|---|
+| `server` | `.github/workflows/server.yml` | `server/**` | `bun install --frozen-lockfile` → `bun test` → `bunx tsc --noEmit` → `bun run lint` → `bun run format:check` |
+| `app` | `.github/workflows/app.yml` | `app/**` | `bun install --frozen-lockfile` only, for now. The test / `tsc --noEmit` / `lint` / `format:check` steps are present but commented out — the app has no test suite, its Expo tsconfig isn't CLI-`tsc`-clean, and it has no lint/format scripts yet. **BTAPP-2** wires those up and uncomments them. |
+
+Both run on `ubuntu-latest` with `oven-sh/setup-bun@v1` and cache `~/.bun/install/cache` keyed on the subproject's `bun.lock`. Each job runs in its subproject directory (`defaults.run.working-directory`).
+
+**Required status checks.** The `server` and `app` checks should be marked **required** in GitHub branch-protection for `main` before a PR can merge — this is a one-time repo-settings step in GitHub (not configurable from the repo). Caveat: a required check that is path-filtered will not report on PRs that don't touch its subproject, which can leave such PRs waiting on a check that never runs; mark a check required only once the team is comfortable with that behavior (or adopt a filter-aware "always-run, skip-internally" pattern).
+
 ## Tickets
 
 Tickets are tracked in **Plane**, across two projects:
